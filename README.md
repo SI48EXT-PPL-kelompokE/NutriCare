@@ -67,7 +67,7 @@ cp .env.example .env
 # Generate application key
 php artisan key:generate
 
-# Migrasi dan seed database (tersedia setelah skema database selesai)
+# Migrasi dan seed database
 php artisan migrate --seed
 
 # Build assets
@@ -76,6 +76,8 @@ npm run dev
 # Jalankan server
 php artisan serve
 ```
+
+Untuk detail skema database, lihat [docs/DATABASE.md](docs/DATABASE.md).
 
 ## Alur Git
 
