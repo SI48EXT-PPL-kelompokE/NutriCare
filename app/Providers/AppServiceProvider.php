@@ -2,6 +2,11 @@
 
 namespace App\Providers;
 
+use App\Contracts\Paket4\NakesLookup;
+use App\Adapters\Paket4\EloquentNakesLookup;
+use App\Models\JadwalPosyandu;
+use App\Policies\JadwalPosyanduPolicy;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -11,7 +16,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(NakesLookup::class, EloquentNakesLookup::class);
     }
 
     /**
@@ -19,6 +24,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Gate::policy(JadwalPosyandu::class, JadwalPosyanduPolicy::class);
     }
 }

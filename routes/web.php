@@ -13,3 +13,6 @@ Route::prefix('pmt')->name('pmt.')->group(function () {
     Route::patch('paket/{paket}/toggle-status', [PaketPmtController::class, 'toggleStatus'])->name('paket.toggle-status');
     Route::resource('paket', PaketPmtController::class);
 });
+
+// Modul Operasional & Rujukan - Paket 4 (Syifa)
+require __DIR__ . '/paket4.php';
