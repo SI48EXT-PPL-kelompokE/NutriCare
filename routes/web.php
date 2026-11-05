@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ArtikelController;
 use App\Http\Controllers\OrangTuaViewController;
 use App\Http\Controllers\PaketPmtController;
 use Illuminate\Support\Facades\Route;
@@ -7,6 +8,11 @@ use Illuminate\Support\Facades\Route;
 // Landing page - default ke PMT Paket (sesuai PBI 8 yang sudah di-merge)
 Route::get('/', function () {
     return redirect()->route('pmt.paket.index');
+});
+
+// Modul Edukasi & Layanan Warga - PBI 15: Artikel & Panduan Edukasi
+Route::prefix('edukasi')->name('edukasi.')->group(function () {
+    Route::resource('artikel', ArtikelController::class);
 });
 
 // Modul Logistik PMT - PBI 8: Master Paket PMT

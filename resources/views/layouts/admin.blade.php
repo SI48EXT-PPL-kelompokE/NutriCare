@@ -137,8 +137,8 @@
                     </a>
 
                     <!-- Artikel & Pengaduan -->
-                    <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-600 rounded-xl hover:bg-slate-50 transition-colors">
-                        <svg class="w-5 h-5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <a href="{{ route('edukasi.artikel.index') }}" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium {{ request()->routeIs('edukasi.*') ? 'text-[#008f7a] bg-[#ecfdf5] font-semibold' : 'text-slate-600 hover:bg-slate-50' }} rounded-xl transition-colors">
+                        <svg class="w-5 h-5 {{ request()->routeIs('edukasi.*') ? 'text-[#008f7a]' : 'text-slate-400' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                             <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
                             <polyline points="14 2 14 8 20 8"/>
                             <line x1="16" x2="8" y1="13" y2="13"/>
