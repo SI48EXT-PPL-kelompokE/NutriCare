@@ -176,5 +176,64 @@ class ArtikelCrudTest extends TestCase
 
         $this->assertNull(Artikel::find($artikelId));
     }
+
+    /**
+     * SCRUM-171 [KF-46]: Memastikan slug otomatis unik ter-generate meskipun terdapat judul yang sama.
+     */
+    public function test_slug_is_automatically_generated_and_unique(): void
+    {
+        $user = User::first() ?? User::factory()->create();
+
+        $artikel1 = Artikel::create([
+            'user_id' => $user->id,
+            'judul' => 'Gizi Seimbang Keluarga Posyandu',
+            'kategori' => 'Gizi Balita',
+            'status' => 'published',
+            'konten' => '<p>Materi panduan gizi.</p>',
+        ]);
+
+        $artikel2 = Artikel::create([
+            'user_id' => $user->id,
+            'judul' => 'Gizi Seimbang Keluarga Posyandu',
+            'kategori' => 'Gizi Balita',
+            'status' => 'draft',
+            'konten' => '<p>Materi panduan gizi duplikat judul.</p>',
+        ]);
+
+        $this->assertEquals('gizi-seimbang-keluarga-posyandu', $artikel1->url_slug);
+        $this->assertEquals('gizi-seimbang-keluarga-posyandu-1', $artikel2->url_slug);
+        $this->assertNotEquals($artikel1->url_slug, $artikel2->url_slug);
+    }
+
+    /**
+     * SCRUM-171 [KF-46]: Memastikan filter kategori, status, dan pencarian kata kunci berfungsi.
+     */
+    public function test_filter_kategori_status_and_keyword_search(): void
+    {
+        $user = User::first() ?? User::factory()->create();
+
+        Artikel::create([
+            'user_id' => $user->id,
+            'judul' => 'Resep MPASI Ayam Brokoli Lezat',
+            'kategori' => 'MPASI Sehat',
+            'status' => 'published',
+            'konten' => '<p>Menu bergizi tinggi protein.</p>',
+        ]);
+
+        // Filter kategori
+        $responseKategori = $this->get(route('edukasi.artikel.index', ['kategori' => 'MPASI Sehat']));
+        $responseKategori->assertStatus(200);
+        $responseKategori->assertSee('Resep MPASI Ayam Brokoli Lezat');
+
+        // Filter search keyword
+        $responseSearch = $this->get(route('edukasi.artikel.index', ['q' => 'Brokoli']));
+        $responseSearch->assertStatus(200);
+        $responseSearch->assertSee('Resep MPASI Ayam Brokoli Lezat');
+
+        // Filter status published
+        $responseStatus = $this->get(route('edukasi.artikel.index', ['status' => 'published']));
+        $responseStatus->assertStatus(200);
+        $responseStatus->assertSee('Resep MPASI Ayam Brokoli Lezat');
+    }
 }
 

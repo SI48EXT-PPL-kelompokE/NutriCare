@@ -9,11 +9,31 @@ use Illuminate\Support\Str;
 
 class ArtikelController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $artikels = Artikel::with('penulis')->latest()->paginate(10);
+        $kategoriList = [
+            'Pencegahan Stunting',
+            'MPASI Sehat',
+            'Gizi Ibu Hamil',
+            'Pola Asuh',
+            'Layanan Kesehatan',
+        ];
 
-        return view('edukasi.artikel.index', compact('artikels'));
+        $artikels = Artikel::with('penulis')
+            ->search($request->query('q'))
+            ->kategori($request->query('kategori'))
+            ->when($request->query('status'), function ($query, $status) {
+                if ($status === 'published') {
+                    $query->published();
+                } elseif ($status === 'draft') {
+                    $query->draft();
+                }
+            })
+            ->latest('id')
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('edukasi.artikel.index', compact('artikels', 'kategoriList'));
     }
 
     public function create()
@@ -48,7 +68,7 @@ class ArtikelController extends Controller
             'judul' => $validated['judul'],
             'kategori' => $validated['kategori'],
             'status' => $validated['status'],
-            'url_slug' => Str::slug($validated['judul']) . '-' . Str::lower(Str::random(4)),
+            'url_slug' => Artikel::generateUniqueSlug($validated['judul']),
             'konten' => $sanitizedContent,
             'published_at' => $validated['status'] === 'published' ? now() : null,
         ]);
@@ -97,6 +117,7 @@ class ArtikelController extends Controller
             'judul' => $validated['judul'],
             'kategori' => $validated['kategori'],
             'status' => $validated['status'],
+            'url_slug' => Artikel::generateUniqueSlug($validated['judul'], $artikel->id),
             'konten' => $sanitizedContent,
             'published_at' => $validated['status'] === 'published' ? ($artikel->published_at ?? now()) : null,
         ]);
