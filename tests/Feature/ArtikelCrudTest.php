@@ -220,20 +220,63 @@ class ArtikelCrudTest extends TestCase
             'konten' => '<p>Menu bergizi tinggi protein.</p>',
         ]);
 
-        // Filter kategori
         $responseKategori = $this->get(route('edukasi.artikel.index', ['kategori' => 'MPASI Sehat']));
         $responseKategori->assertStatus(200);
         $responseKategori->assertSee('Resep MPASI Ayam Brokoli Lezat');
 
-        // Filter search keyword
         $responseSearch = $this->get(route('edukasi.artikel.index', ['q' => 'Brokoli']));
         $responseSearch->assertStatus(200);
         $responseSearch->assertSee('Resep MPASI Ayam Brokoli Lezat');
 
-        // Filter status published
         $responseStatus = $this->get(route('edukasi.artikel.index', ['status' => 'published']));
         $responseStatus->assertStatus(200);
         $responseStatus->assertSee('Resep MPASI Ayam Brokoli Lezat');
+    }
+
+    /**
+     * SCRUM-171 [KF-46]: Memastikan pengunjung dapat membaca artikel terbit melalui url slug.
+     */
+    public function test_pengunjung_dapat_membaca_artikel_terbit_melalui_slug(): void
+    {
+        $user = User::first() ?? User::factory()->create();
+
+        $artikel = Artikel::create([
+            'user_id' => $user->id,
+            'judul' => 'Panduan Gizi Publik Terbit',
+            'kategori' => 'Gizi Balita',
+            'status' => 'published',
+            'url_slug' => 'panduan-gizi-publik-terbit',
+            'konten' => '<p>Konten artikel yang boleh dibaca masyarakat umum.</p>',
+            'published_at' => now(),
+        ]);
+
+        $response = $this->get(route('edukasi.artikel.baca', $artikel->url_slug));
+
+        $response->assertStatus(200);
+        $response->assertSee('Panduan Gizi Publik Terbit');
+        $response->assertSee('Konten artikel yang boleh dibaca masyarakat umum.');
+    }
+
+    /**
+     * SCRUM-171 [KF-46]: Memastikan hanya artikel terbit yang tampil ke pengunjung (draft mengembalikan 404).
+     */
+    public function test_hanya_artikel_terbit_yang_tampil_ke_pengunjung_draft_mengembalikan_404(): void
+    {
+        $user = User::first() ?? User::factory()->create();
+
+        $artikelDraft = Artikel::create([
+            'user_id' => $user->id,
+            'judul' => 'Draf Rahasia Posyandu Belum Terbit',
+            'kategori' => 'Pola Asuh',
+            'status' => 'draft',
+            'url_slug' => 'draf-rahasia-posyandu-belum-terbit',
+            'konten' => '<p>Materi masih dalam penyusunan kader internal.</p>',
+            'published_at' => null,
+        ]);
+
+        $response = $this->get(route('edukasi.artikel.baca', $artikelDraft->url_slug));
+
+        $response->assertStatus(404);
     }
 }
 

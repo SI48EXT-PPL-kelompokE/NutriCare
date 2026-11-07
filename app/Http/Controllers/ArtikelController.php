@@ -78,6 +78,19 @@ class ArtikelController extends Controller
             ->with('success', 'Artikel edukasi berhasil dibuat.');
     }
 
+    /**
+     * Menampilkan artikel untuk pengunjung publik berdasarkan slug (hanya yang berstatus published).
+     */
+    public function baca($slug)
+    {
+        $artikel = Artikel::with('penulis')
+            ->published()
+            ->where('url_slug', $slug)
+            ->firstOrFail();
+
+        return view('edukasi.artikel.show', compact('artikel'));
+    }
+
     public function show($id)
     {
         $artikel = Artikel::with('penulis')->findOrFail($id);

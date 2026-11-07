@@ -12,6 +12,7 @@ Route::get('/', function () {
 
 // Modul Edukasi & Layanan Warga - PBI 15: Artikel & Panduan Edukasi
 Route::prefix('edukasi')->name('edukasi.')->group(function () {
+    Route::get('artikel/baca/{slug}', [ArtikelController::class, 'baca'])->name('artikel.baca');
     Route::resource('artikel', ArtikelController::class);
 });
 

@@ -96,9 +96,9 @@
                         <span>Dashboard</span>
                     </a>
 
-                    <!-- Data Balita & Kependudukan (Active) -->
-                    <a href="{{ route('kependudukan.orang-tua.index') }}" class="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-[#008f7a] bg-[#ecfdf5] rounded-xl transition-colors">
-                        <svg class="w-5 h-5 text-[#008f7a]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <!-- Data Balita & Kependudukan -->
+                    <a href="{{ route('kependudukan.orang-tua.index') }}" class="flex items-center gap-3 px-3 py-2.5 text-sm {{ request()->routeIs('kependudukan.*') ? 'font-semibold text-[#008f7a] bg-[#ecfdf5]' : 'font-medium text-slate-600 hover:bg-slate-50' }} rounded-xl transition-colors">
+                        <svg class="w-5 h-5 {{ request()->routeIs('kependudukan.*') ? 'text-[#008f7a]' : 'text-slate-400' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="12" cy="12" r="10"/>
                             <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
                             <line x1="9" x2="9.01" y1="9" y2="9"/>
@@ -116,8 +116,8 @@
                     </a>
 
                     <!-- Logistik PMT -->
-                    <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-600 rounded-xl hover:bg-slate-50 transition-colors">
-                        <svg class="w-5 h-5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <a href="{{ route('pmt.paket.index') }}" class="flex items-center gap-3 px-3 py-2.5 text-sm {{ request()->routeIs('pmt.*') ? 'font-semibold text-[#008f7a] bg-[#ecfdf5]' : 'font-medium text-slate-600 hover:bg-slate-50' }} rounded-xl transition-colors">
+                        <svg class="w-5 h-5 {{ request()->routeIs('pmt.*') ? 'text-[#008f7a]' : 'text-slate-400' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                             <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
                             <path d="m3.3 7 8.7 5 8.7-5"/>
                             <path d="M12 22V12"/>
