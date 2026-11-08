@@ -136,6 +136,17 @@
                         <span>Jadwal & Rujukan</span>
                     </a>
 
+                    <!-- Konseling Gizi -->
+                    <a href="{{ route('konseling.index') }}" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium {{ request()->routeIs('konseling.*') ? 'text-[#008f7a] bg-[#ecfdf5] font-semibold' : 'text-slate-600 hover:bg-slate-50' }} rounded-xl transition-colors">
+                        <svg class="w-5 h-5 {{ request()->routeIs('konseling.*') ? 'text-[#008f7a]' : 'text-slate-400' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                            <path d="M8 10h.01"/>
+                            <path d="M12 10h.01"/>
+                            <path d="M16 10h.01"/>
+                        </svg>
+                        <span>Konseling Gizi</span>
+                    </a>
+
                     <!-- Artikel & Pengaduan -->
                     <a href="{{ route('edukasi.artikel.index') }}" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium {{ request()->routeIs('edukasi.*') ? 'text-[#008f7a] bg-[#ecfdf5] font-semibold' : 'text-slate-600 hover:bg-slate-50' }} rounded-xl transition-colors">
                         <svg class="w-5 h-5 {{ request()->routeIs('edukasi.*') ? 'text-[#008f7a]' : 'text-slate-400' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">

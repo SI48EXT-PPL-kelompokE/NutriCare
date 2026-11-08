@@ -3,6 +3,7 @@
 use App\Http\Controllers\ArtikelController;
 use App\Http\Controllers\OrangTuaViewController;
 use App\Http\Controllers\PaketPmtController;
+use App\Http\Controllers\SesiKonselingController;
 use Illuminate\Support\Facades\Route;
 
 // Landing page - default ke PMT Paket (sesuai PBI 8 yang sudah di-merge)
@@ -15,6 +16,9 @@ Route::prefix('edukasi')->name('edukasi.')->group(function () {
     Route::get('artikel/baca/{slug}', [ArtikelController::class, 'baca'])->name('artikel.baca');
     Route::resource('artikel', ArtikelController::class);
 });
+
+// Modul Layanan Warga - PBI 16: Konseling Gizi Balita
+Route::resource('konseling', SesiKonselingController::class);
 
 // Modul Logistik PMT - PBI 8: Master Paket PMT
 Route::prefix('pmt')->name('pmt.')->group(function () {
