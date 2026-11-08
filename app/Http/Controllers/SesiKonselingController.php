@@ -34,49 +34,96 @@ class SesiKonselingController extends Controller
     }
 
     /**
-     * Menampilkan form pengajuan sesi konseling gizi baru.
+     * Menampilkan formulir pengajuan sesi konseling baru.
      */
     public function create()
     {
-        $orangTuaList = OrangTua::orderBy('name')->get();
+        $orangTuaList = OrangTua::with('balita')->orderBy('name')->get();
         $topikList = SesiKonseling::TOPIK_LIST;
 
         return view('edukasi.konseling.create', compact('orangTuaList', 'topikList'));
     }
 
     /**
-     * Menyimpan pengajuan sesi konseling baru dari orang tua.
+     * Menyimpan pengajuan sesi konseling baru dengan status awal diajukan.
      */
     public function store(Request $request)
     {
         $validated = $request->validate([
             'orang_tua_id' => 'required|exists:orang_tua,id',
             'topik' => 'required|string|max:255',
-            'jadwal' => 'nullable|date',
+            'jadwal_harapan' => 'nullable|date',
+            'keluhan' => 'nullable|string|max:1000',
         ]);
 
-        $validated['status'] = 'diajukan';
-        $validated['user_id'] = null;
-        $validated['hasil'] = null;
-
-        SesiKonseling::create($validated);
+        $sesi = SesiKonseling::create([
+            'orang_tua_id' => $validated['orang_tua_id'],
+            'topik' => $validated['topik'],
+            'jadwal' => $validated['jadwal_harapan'] ?? null,
+            'status' => 'diajukan',
+            'user_id' => null,
+            'hasil' => !empty($validated['keluhan']) ? 'Keluhan awal: ' . $validated['keluhan'] : null,
+        ]);
 
         return redirect()->route('konseling.index')
-            ->with('success', 'Pengajuan sesi konseling gizi berhasil dikirim.');
+            ->with('success', 'Pengajuan sesi konseling gizi berhasil dikirim dan menunggu penjadwalan nakes.');
     }
 
     /**
-     * Menampilkan detail sesi konseling beserta riwayat dan tindakan nakes.
+     * Menampilkan detail sesi konseling dan formulir tindakan nakes.
      */
     public function show($id)
     {
         $sesi = SesiKonseling::with(['orangTua.balita', 'nakes'])->findOrFail($id);
+        
         $nakesList = User::whereHas('role', function ($q) {
             $q->where('name_role', 'like', '%Nakes%')
               ->orWhere('name_role', 'like', '%Bidan%');
         })->where('active_status', true)->get();
 
         return view('edukasi.konseling.show', compact('sesi', 'nakesList'));
+    }
+
+    /**
+     * Menetapkan jadwal konsultasi dan menugaskan tenaga kesehatan pendamping.
+     */
+    public function jadwalkan(Request $request, $id)
+    {
+        $sesi = SesiKonseling::findOrFail($id);
+
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'jadwal' => 'required|date',
+        ]);
+
+        $sesi->update([
+            'user_id' => $validated['user_id'],
+            'jadwal' => $validated['jadwal'],
+            'status' => 'dijadwalkan',
+        ]);
+
+        return redirect()->route('konseling.show', $sesi->id)
+            ->with('success', 'Sesi konseling berhasil dijadwalkan bersama tenaga kesehatan.');
+    }
+
+    /**
+     * Menyimpan hasil evaluasi konseling klinis dan memperbarui status menjadi selesai.
+     */
+    public function selesai(Request $request, $id)
+    {
+        $sesi = SesiKonseling::findOrFail($id);
+
+        $validated = $request->validate([
+            'hasil' => 'required|string|min:5',
+        ]);
+
+        $sesi->update([
+            'hasil' => $validated['hasil'],
+            'status' => 'selesai',
+        ]);
+
+        return redirect()->route('konseling.show', $sesi->id)
+            ->with('success', 'Konsultasi selesai dan hasil konseling telah berhasil dicatat.');
     }
 
     /**
@@ -91,4 +138,3 @@ class SesiKonselingController extends Controller
             ->with('success', 'Data sesi konseling berhasil dihapus.');
     }
 }
-
