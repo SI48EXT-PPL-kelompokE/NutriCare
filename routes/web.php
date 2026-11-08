@@ -18,6 +18,7 @@ Route::prefix('edukasi')->name('edukasi.')->group(function () {
 });
 
 // Modul Layanan Warga - PBI 16: Konseling Gizi Balita
+Route::get('konseling/cek-ketersediaan', [SesiKonselingController::class, 'cekKetersediaan'])->name('konseling.cek-ketersediaan');
 Route::patch('konseling/{konseling}/jadwalkan', [SesiKonselingController::class, 'jadwalkan'])->name('konseling.jadwalkan');
 Route::patch('konseling/{konseling}/selesai', [SesiKonselingController::class, 'selesai'])->name('konseling.selesai');
 Route::resource('konseling', SesiKonselingController::class);

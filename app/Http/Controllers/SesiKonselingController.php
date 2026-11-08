@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\OrangTua;
 use App\Models\SesiKonseling;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class SesiKonselingController extends Controller
@@ -85,7 +86,50 @@ class SesiKonselingController extends Controller
     }
 
     /**
-     * Menetapkan jadwal konsultasi dan menugaskan tenaga kesehatan pendamping.
+     * Memeriksa ketersediaan jadwal nakes via JSON (SCRUM-177 [KF-48]).
+     */
+    public function cekKetersediaan(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'jadwal' => 'required|date',
+            'ignore_id' => 'nullable|integer',
+        ]);
+
+        $nakes = User::find($request->user_id);
+        if (!$nakes || !$nakes->active_status) {
+            return response()->json([
+                'available' => false,
+                'message' => 'Tenaga kesehatan terpilih sedang tidak aktif bertugas.',
+            ]);
+        }
+
+        $targetTime = Carbon::parse($request->jadwal);
+        $startWindow = $targetTime->copy()->subMinutes(59);
+        $endWindow = $targetTime->copy()->addMinutes(59);
+
+        $conflict = SesiKonseling::where('user_id', $request->user_id)
+            ->when($request->ignore_id, fn($q) => $q->where('id', '!=', $request->ignore_id))
+            ->where('status', 'dijadwalkan')
+            ->whereBetween('jadwal', [$startWindow, $endWindow])
+            ->first();
+
+        if ($conflict) {
+            $jam = $conflict->jadwal ? $conflict->jadwal->format('H:i') : '';
+            return response()->json([
+                'available' => false,
+                'message' => "Tenaga kesehatan {$nakes->name} telah memiliki agenda pada pukul {$jam} WIB. Nakes tidak tersedia, mohon pilih waktu lain.",
+            ]);
+        }
+
+        return response()->json([
+            'available' => true,
+            'message' => "Tenaga kesehatan {$nakes->name} tersedia pada waktu tersebut.",
+        ]);
+    }
+
+    /**
+     * Menetapkan jadwal konsultasi dan memvalidasi ketersediaan nakes (SCRUM-177 [KF-48]).
      */
     public function jadwalkan(Request $request, $id)
     {
@@ -95,6 +139,31 @@ class SesiKonselingController extends Controller
             'user_id' => 'required|exists:users,id',
             'jadwal' => 'required|date',
         ]);
+
+        $nakes = User::findOrFail($validated['user_id']);
+        if (!$nakes->active_status) {
+            return back()->withInput()->withErrors([
+                'user_id' => 'Tenaga kesehatan terpilih sedang tidak aktif bertugas.',
+            ]);
+        }
+
+        // Pengecekan ketersediaan nakes: durasi konsultasi diasumsikan 1 jam (59 menit batas overlap)
+        $targetTime = Carbon::parse($validated['jadwal']);
+        $startWindow = $targetTime->copy()->subMinutes(59);
+        $endWindow = $targetTime->copy()->addMinutes(59);
+
+        $conflict = SesiKonseling::where('user_id', $validated['user_id'])
+            ->where('id', '!=', $sesi->id)
+            ->where('status', 'dijadwalkan')
+            ->whereBetween('jadwal', [$startWindow, $endWindow])
+            ->first();
+
+        if ($conflict) {
+            $jamBentrok = $conflict->jadwal ? $conflict->jadwal->format('H:i') : '';
+            return back()->withInput()->withErrors([
+                'jadwal' => "Tenaga kesehatan {$nakes->name} telah memiliki agenda konseling pada pukul {$jamBentrok} WIB. Nakes tidak tersedia: minta pilih waktu lain.",
+            ]);
+        }
 
         $sesi->update([
             'user_id' => $validated['user_id'],

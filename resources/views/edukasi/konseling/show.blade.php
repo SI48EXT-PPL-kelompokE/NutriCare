@@ -197,6 +197,18 @@
                 </h2>
 
                 @if ($sesi->status === 'diajukan')
+                    @if ($errors->has('jadwal') || $errors->has('user_id'))
+                        <div class="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 space-y-1">
+                            <div class="flex items-center gap-1.5 font-bold text-rose-800">
+                                <svg class="w-4 h-4 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                </svg>
+                                <span>Jadwal Nakes Tidak Tersedia</span>
+                            </div>
+                            <p class="leading-relaxed">{{ $errors->first('jadwal') ?: $errors->first('user_id') }}</p>
+                        </div>
+                    @endif
+
                     <form action="{{ route('konseling.jadwalkan', $sesi->id) }}" method="POST" class="space-y-4">
                         @csrf
                         @method('PATCH')
@@ -238,6 +250,7 @@
                             @error('jadwal')
                                 <p class="text-rose-600 text-[11px] mt-1">{{ $message }}</p>
                             @enderror
+                            <div id="availabilityNotice" class="hidden mt-2 p-2 rounded-lg text-[11px] leading-tight"></div>
                         </div>
 
                         <button type="submit" id="btnJadwalkanKonseling" class="w-full py-2.5 bg-[#008f7a] hover:bg-[#007a68] text-white text-xs font-semibold rounded-xl transition-colors shadow-sm flex items-center justify-center gap-2">
@@ -281,4 +294,51 @@
 
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const userIdInput = document.getElementById('user_id');
+        const jadwalInput = document.getElementById('jadwal');
+        const noticeBox = document.getElementById('availabilityNotice');
+
+        function checkAvailability() {
+            if (!userIdInput || !jadwalInput || !noticeBox) return;
+
+            const userId = userIdInput.value;
+            const jadwal = jadwalInput.value;
+
+            if (!userId || !jadwal) {
+                noticeBox.classList.add('hidden');
+                return;
+            }
+
+            const url = `{{ route('konseling.cek-ketersediaan') }}?user_id=${userId}&jadwal=${encodeURIComponent(jadwal)}&ignore_id={{ $sesi->id }}`;
+
+            fetch(url)
+                .then(res => res.json())
+                .then(data => {
+                    noticeBox.classList.remove('hidden', 'bg-rose-50', 'text-rose-700', 'border-rose-200', 'bg-emerald-50', 'text-emerald-700', 'border-emerald-200');
+                    noticeBox.classList.add('border');
+
+                    if (data.available) {
+                        noticeBox.classList.add('bg-emerald-50', 'text-emerald-700', 'border-emerald-200');
+                        noticeBox.textContent = data.message;
+                    } else {
+                        noticeBox.classList.add('bg-rose-50', 'text-rose-700', 'border-rose-200');
+                        noticeBox.textContent = data.message;
+                    }
+                })
+                .catch(() => {
+                    noticeBox.classList.add('hidden');
+                });
+        }
+
+        if (userIdInput && jadwalInput) {
+            userIdInput.addEventListener('change', checkAvailability);
+            jadwalInput.addEventListener('change', checkAvailability);
+        }
+    });
+</script>
+@endpush
 

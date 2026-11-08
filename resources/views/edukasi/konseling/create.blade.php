@@ -37,7 +37,7 @@
             <!-- Pilihan orang tua & balita -->
             <div>
                 <label for="orang_tua_id" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Orang Tua & Balita Terdaftar <span class="text-rose-500">*</span>
+                    Orang Tua dan Balita Terdaftar <span class="text-rose-500">*</span>
                 </label>
                 <select 
                     name="orang_tua_id" 

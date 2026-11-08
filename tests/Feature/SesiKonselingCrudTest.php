@@ -69,7 +69,7 @@ class SesiKonselingCrudTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('Formulir Pengajuan Konseling Gizi');
-        $response->assertSee('Orang Tua &amp; Balita Terdaftar', false);
+        $response->assertSee('Orang Tua dan Balita Terdaftar');
         $response->assertSee('Konseling Gizi Balita');
         $response->assertSee('Pencegahan Stunting');
     }
@@ -79,9 +79,9 @@ class SesiKonselingCrudTest extends TestCase
      */
     public function test_parent_can_submit_counseling_request_with_status_diajukan(): void
     {
-        $orangTua = OrangTua::first() ?? OrangTua::create([
-            'nik' => '3201018808880002',
-            'name' => 'Ibu Rahmawati Test',
+        $orangTua = OrangTua::create([
+            'nik' => '3201018808889999',
+            'name' => 'Ibu Rahmawati Test Unique',
             'alamat' => 'Jl. Melati No. 5',
             'kontak' => '082199887766',
             'pregnancy_status' => 'tidak_hamil',
@@ -100,7 +100,7 @@ class SesiKonselingCrudTest extends TestCase
         $response->assertSessionHas('success');
 
         $sesi = SesiKonseling::where('orang_tua_id', $orangTua->id)
-            ->where('topik', 'MPASI dan Pola Makan Sehat')
+            ->latest('id')
             ->first();
 
         $this->assertNotNull($sesi);
@@ -185,5 +185,103 @@ class SesiKonselingCrudTest extends TestCase
         $sesi->refresh();
         $this->assertEquals('selesai', $sesi->status);
         $this->assertStringContainsString('z-score membaik', $sesi->hasil);
+    }
+
+    /**
+     * SCRUM-177 [KF-48]: Memastikan sistem menolak dan meminta pilih waktu lain jika nakes memiliki jadwal bentrok.
+     */
+    public function test_scheduling_fails_when_nakes_has_conflicting_schedule(): void
+    {
+        $orangTua = OrangTua::first() ?? OrangTua::create([
+            'nik' => '3201015505550005',
+            'name' => 'Ibu Dewi Sartika',
+            'alamat' => 'Jl. Pahlawan No. 1',
+            'kontak' => '081299887766',
+            'pregnancy_status' => 'tidak_hamil',
+        ]);
+
+        $nakes = User::first() ?? User::factory()->create();
+
+        $jadwalAwal = now()->addDays(2)->setHour(9)->setMinute(0)->setSecond(0);
+
+        // Sesi 1 yang sudah dijadwalkan
+        SesiKonseling::create([
+            'orang_tua_id' => $orangTua->id,
+            'user_id' => $nakes->id,
+            'topik' => 'Konseling Gizi Balita Sesi 1',
+            'status' => 'dijadwalkan',
+            'jadwal' => $jadwalAwal,
+        ]);
+
+        // Sesi 2 yang masih diajukan dan ingin dijadwalkan bentrok
+        $sesi2 = SesiKonseling::create([
+            'orang_tua_id' => $orangTua->id,
+            'topik' => 'Konseling Gizi Balita Sesi 2',
+            'status' => 'diajukan',
+            'user_id' => null,
+            'jadwal' => null,
+        ]);
+
+        // Jadwal bentrok (hanya selisih 30 menit dari sesi 1)
+        $jadwalBentrok = $jadwalAwal->copy()->addMinutes(30)->format('Y-m-d\TH:i');
+
+        $response = $this->patch(route('konseling.jadwalkan', $sesi2->id), [
+            'user_id' => $nakes->id,
+            'jadwal' => $jadwalBentrok,
+        ]);
+
+        $response->assertSessionHasErrors(['jadwal']);
+        $this->assertStringContainsString('Nakes tidak tersedia: minta pilih waktu lain', session('errors')->first('jadwal'));
+
+        $sesi2->refresh();
+        $this->assertEquals('diajukan', $sesi2->status);
+    }
+
+    /**
+     * SCRUM-177 [KF-48]: Memastikan endpoint cek ketersediaan nakes merespons JSON status ketersediaan dengan tepat.
+     */
+    public function test_cek_ketersediaan_api_returns_conflict_and_available_responses(): void
+    {
+        $orangTua = OrangTua::first() ?? OrangTua::create([
+            'nik' => '3201014404440006',
+            'name' => 'Ibu Kartini Test',
+            'alamat' => 'Jl. Kartini No. 2',
+            'kontak' => '081399887711',
+            'pregnancy_status' => 'tidak_hamil',
+        ]);
+
+        $nakes = User::first() ?? User::factory()->create();
+        $jadwalPenuh = now()->addDays(3)->setHour(14)->setMinute(0)->setSecond(0);
+
+        SesiKonseling::create([
+            'orang_tua_id' => $orangTua->id,
+            'user_id' => $nakes->id,
+            'topik' => 'Stimulasi Tumbuh Kembang',
+            'status' => 'dijadwalkan',
+            'jadwal' => $jadwalPenuh,
+        ]);
+
+        // Cek pada jam yang sama (bentrok)
+        $responseBentrok = $this->getJson(route('konseling.cek-ketersediaan', [
+            'user_id' => $nakes->id,
+            'jadwal' => $jadwalPenuh->format('Y-m-d\TH:i'),
+        ]));
+
+        $responseBentrok->assertStatus(200);
+        $responseBentrok->assertJson([
+            'available' => false,
+        ]);
+
+        // Cek pada waktu yang bebas (tidak bentrok)
+        $jadwalBebas = $jadwalPenuh->copy()->addHours(3)->format('Y-m-d\TH:i');
+        $responseBebas = $this->getJson(route('konseling.cek-ketersediaan', [
+            'user_id' => $nakes->id,
+            'jadwal' => $jadwalBebas,
+        ]));
+
+        $responseBebas->assertStatus(200);
+        $responseBebas->assertJson([
+            'available' => true,
+        ]);
     }
 }
