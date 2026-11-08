@@ -5,7 +5,9 @@ namespace Tests\Feature;
 use App\Models\OrangTua;
 use App\Models\SesiKonseling;
 use App\Models\User;
+use App\Notifications\StatusKonselingNotification;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class SesiKonselingCrudTest extends TestCase
@@ -283,5 +285,79 @@ class SesiKonselingCrudTest extends TestCase
         $responseBebas->assertJson([
             'available' => true,
         ]);
+    }
+
+    /**
+     * SCRUM-180 & SCRUM-181 [KF-49]: Memastikan notifikasi perubahan status konseling terkirim pada setiap transisi status.
+     */
+    public function test_notification_sent_when_counseling_status_changes(): void
+    {
+        Notification::fake();
+
+        $orangTua = OrangTua::create([
+            'nik' => '3201019998887776',
+            'name' => 'Ibu Notifikasi Test',
+            'alamat' => 'Jl. Flamboyan No. 7',
+            'kontak' => '081299881122',
+            'pregnancy_status' => 'tidak_hamil',
+        ]);
+
+        $nakes = User::first() ?? User::factory()->create();
+
+        // 1. Uji transisi status 'diajukan' via store
+        $responseStore = $this->post(route('konseling.store'), [
+            'orang_tua_id' => $orangTua->id,
+            'topik' => 'MPASI dan Pola Makan Sehat',
+            'keluhan' => 'Anak kurang nafsu makan sayur dan buah',
+        ]);
+        $responseStore->assertRedirect(route('konseling.index'));
+
+        Notification::assertSentTo(
+            $orangTua,
+            StatusKonselingNotification::class,
+            function ($notification) {
+                return $notification->status === 'diajukan';
+            }
+        );
+
+        $sesi = SesiKonseling::where('orang_tua_id', $orangTua->id)->latest('id')->first();
+        $this->assertNotNull($sesi);
+        $this->assertEquals('diajukan', $sesi->status);
+
+        // 2. Uji transisi status 'dijadwalkan' via jadwalkan
+        $jadwal = now()->addDays(2)->setHour(10)->setMinute(0)->format('Y-m-d\TH:i');
+        $responseJadwalkan = $this->patch(route('konseling.jadwalkan', $sesi->id), [
+            'user_id' => $nakes->id,
+            'jadwal' => $jadwal,
+        ]);
+        $responseJadwalkan->assertRedirect(route('konseling.show', $sesi->id));
+
+        Notification::assertSentTo(
+            $orangTua,
+            StatusKonselingNotification::class,
+            function ($notification) {
+                return $notification->status === 'dijadwalkan';
+            }
+        );
+
+        $sesi->refresh();
+        $this->assertEquals('dijadwalkan', $sesi->status);
+
+        // 3. Uji transisi status 'selesai' via selesai
+        $responseSelesai = $this->patch(route('konseling.selesai', $sesi->id), [
+            'hasil' => 'Konseling gizi selesai. Diberikan panduan menu MPASI kaya protein hewani dan jadwal makan teratur.',
+        ]);
+        $responseSelesai->assertRedirect(route('konseling.show', $sesi->id));
+
+        Notification::assertSentTo(
+            $orangTua,
+            StatusKonselingNotification::class,
+            function ($notification) {
+                return $notification->status === 'selesai';
+            }
+        );
+
+        $sesi->refresh();
+        $this->assertEquals('selesai', $sesi->status);
     }
 }

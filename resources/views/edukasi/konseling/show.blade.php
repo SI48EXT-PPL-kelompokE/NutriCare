@@ -3,7 +3,7 @@
 @section('title', 'Detail Sesi Konseling - ' . $sesi->topik)
 
 @section('content')
-<div class="space-y-6 max-w-5xl">
+<div class="space-y-6 w-full">
 
     <!-- Header & navigasi -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -53,14 +53,26 @@
         </div>
     @endif
 
+    @if (session('status_notifikasi'))
+        <div class="p-4 bg-sky-50 border border-sky-200 rounded-2xl flex items-center gap-3 text-xs text-sky-800">
+            <svg class="w-5 h-5 text-sky-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+            </svg>
+            <div>
+                <span class="font-bold block">Status Notifikasi (KF-49)</span>
+                <span class="text-sky-700">{{ session('status_notifikasi') }}</span>
+            </div>
+        </div>
+    @endif
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         <!-- Kolom kiri: progres & hasil konseling -->
         <div class="lg:col-span-2 space-y-6">
 
-            <!-- Tahapan status konseling -->
+            <!-- Tahapan status konseling & log notifikasi -->
             <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-                <h2 class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-4">Alur Perkembangan Sesi</h2>
+                <h2 class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-4">Alur Perkembangan Sesi & Notifikasi</h2>
                 <div class="grid grid-cols-3 gap-2 text-center text-xs">
                     <div class="p-3 rounded-xl {{ in_array($sesi->status, ['diajukan', 'dijadwalkan', 'selesai']) ? 'bg-amber-50 border border-amber-200 text-amber-800 font-semibold' : 'bg-slate-50 text-slate-400' }}">
                         <span class="block text-[10px] uppercase text-amber-600 font-bold mb-0.5">Tahap 1</span>
@@ -75,6 +87,57 @@
                     <div class="p-3 rounded-xl {{ $sesi->status === 'selesai' ? 'bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold' : 'bg-slate-50 text-slate-400' }}">
                         <span class="block text-[10px] uppercase text-emerald-600 font-bold mb-0.5">Tahap 3</span>
                         <span>3. Selesai</span>
+                    </div>
+                </div>
+
+                <!-- Kartu Status Notifikasi Terkirim (KF-49) -->
+                <div class="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3 text-xs">
+                    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                        <div class="flex items-start gap-3">
+                            <div class="p-2 bg-teal-50 border border-teal-200 text-[#008f7a] rounded-lg shrink-0 mt-0.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                                </svg>
+                            </div>
+                            <div class="space-y-0.5">
+                                <span class="font-bold text-slate-900 block">Riwayat & Status Notifikasi (KF-49) — Penerima:</span>
+                                <span class="text-[11px] text-slate-500 block">
+                                    Ditujukan untuk: <strong>{{ $sesi->orangTua->name ?? 'Orang Tua' }}</strong> 
+                                    @if ($sesi->orangTua && $sesi->orangTua->balita && $sesi->orangTua->balita->count() > 0)
+                                        (Balita: <strong>{{ $sesi->orangTua->balita->first()->name }}</strong>)
+                                    @endif
+                                </span>
+                                @if ($sesi->status === 'diajukan')
+                                    <p class="text-slate-600 leading-relaxed pt-1">
+                                        Pesan: Permohonan konseling gizi topik '{{ $sesi->topik }}' telah tercatat dan sedang menunggu penetapan jadwal nakes.
+                                    </p>
+                                @elseif ($sesi->status === 'dijadwalkan')
+                                    <p class="text-slate-600 leading-relaxed pt-1">
+                                        Pesan: Jadwal konseling gizi balita telah ditetapkan bersama <strong>{{ $sesi->nakes->name ?? 'Tenaga Medis' }}</strong> pada <strong>{{ $sesi->jadwal ? $sesi->jadwal->format('d M Y, H:i') . ' WIB' : '-' }}</strong>.
+                                    </p>
+                                @elseif ($sesi->status === 'selesai')
+                                    <p class="text-slate-600 leading-relaxed pt-1">
+                                        Pesan: Sesi konseling telah selesai. Rekomendasi pola makan dan hasil evaluasi klinis balita siap ditinjau.
+                                    </p>
+                                @endif
+                            </div>
+                        </div>
+
+                        <!-- Tombol Izin & Uji Notifikasi Peramban Asli -->
+                        <div class="shrink-0">
+                            <button type="button" id="btnRequestBrowserNotif" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-teal-300 hover:bg-teal-50 text-[#008f7a] text-[11px] font-semibold rounded-lg shadow-2xs transition-colors">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                                </svg>
+                                <span id="labelBrowserNotif">Aktifkan Notifikasi Desktop</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Indikator Status Izin Browser -->
+                    <div id="browserNotifStatus" class="text-[11px] text-slate-400 border-t border-slate-200/60 pt-2 flex items-center justify-between">
+                        <span id="browserNotifMsg">Peramban belum mengaktifkan izin notifikasi desktop untuk orang tua.</span>
+                        <span id="browserNotifBadge" class="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-600">Belum Aktif</span>
                     </div>
                 </div>
             </div>
@@ -338,6 +401,101 @@
             userIdInput.addEventListener('change', checkAvailability);
             jadwalInput.addEventListener('change', checkAvailability);
         }
+
+        // --- Web Notification API (KF-49: Notifikasi Desktop Orang Tua) ---
+        const btnNotif = document.getElementById('btnRequestBrowserNotif');
+        const notifBadge = document.getElementById('browserNotifBadge');
+        const notifMsg = document.getElementById('browserNotifMsg');
+        const labelNotif = document.getElementById('labelBrowserNotif');
+
+        const parentName = @json($sesi->orangTua->name ?? 'Orang Tua');
+        const balitaName = @json($sesi->orangTua?->balita?->first()?->name ?? 'Balita');
+        const currentStatus = @json($sesi->status);
+        const topikKonseling = @json($sesi->topik);
+        const jadwalText = @json($sesi->jadwal ? $sesi->jadwal->format('d M Y, H:i') . ' WIB' : '');
+        const nakesName = @json($sesi->nakes->name ?? 'Tenaga Kesehatan');
+
+        function getNotifPayload() {
+            if (currentStatus === 'dijadwalkan') {
+                return {
+                    title: `NutriCare: Jadwal Konseling Ditetapkan!`,
+                    body: `Halo Ibu/Bpk ${parentName}, jadwal konseling gizi untuk balita ${balitaName} telah ditetapkan bersama ${nakesName} pada ${jadwalText}.`
+                };
+            } else if (currentStatus === 'selesai') {
+                return {
+                    title: `NutriCare: Hasil Konseling Siap Dilihat`,
+                    body: `Halo Ibu/Bpk ${parentName}, sesi konseling gizi untuk balita ${balitaName} telah selesai. Catatan evaluasi dan anjuran gizi siap ditinjau.`
+                };
+            } else {
+                return {
+                    title: `NutriCare: Permohonan Konseling Diajukan`,
+                    body: `Halo Ibu/Bpk ${parentName}, pengajuan konseling gizi topik '${topikKonseling}' atas balita ${balitaName} berhasil terdaftar dan menunggu jadwal nakes.`
+                };
+            }
+        }
+
+        function triggerNativeNotification(title, body) {
+            if (!("Notification" in window)) return;
+
+            if (Notification.permission === "granted") {
+                new Notification(title, {
+                    body: body,
+                    icon: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23008f7a"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>'
+                });
+            }
+        }
+
+        function updateNotifUi() {
+            if (!("Notification" in window)) {
+                if (notifMsg) notifMsg.textContent = "Peramban ini tidak mendukung Web Notification API.";
+                if (btnNotif) btnNotif.style.display = 'none';
+                return;
+            }
+
+            if (Notification.permission === "granted") {
+                if (notifBadge) {
+                    notifBadge.textContent = "Aktif";
+                    notifBadge.className = "px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-100 text-emerald-800";
+                }
+                if (notifMsg) notifMsg.textContent = `Notifikasi peramban aktif untuk akun Orang Tua (Ibu/Bpk ${parentName}).`;
+                if (labelNotif) labelNotif.textContent = "Uji Pop-up Notifikasi";
+            } else if (Notification.permission === "denied") {
+                if (notifBadge) {
+                    notifBadge.textContent = "Diblokir";
+                    notifBadge.className = "px-2 py-0.5 rounded text-[10px] font-medium bg-rose-100 text-rose-800";
+                }
+                if (notifMsg) notifMsg.textContent = "Izin notifikasi diblokir di setelan peramban.";
+                if (labelNotif) labelNotif.textContent = "Izin Diblokir";
+            }
+        }
+
+        updateNotifUi();
+
+        if (btnNotif) {
+            btnNotif.addEventListener('click', function () {
+                if (!("Notification" in window)) return;
+
+                if (Notification.permission === "granted") {
+                    const payload = getNotifPayload();
+                    triggerNativeNotification(payload.title, payload.body);
+                } else if (Notification.permission !== "denied") {
+                    Notification.requestPermission().then(function (permission) {
+                        updateNotifUi();
+                        if (permission === "granted") {
+                            const payload = getNotifPayload();
+                            triggerNativeNotification(payload.title, payload.body);
+                        }
+                    });
+                }
+            });
+        }
+
+        @if (session('status_notifikasi'))
+            if ("Notification" in window && Notification.permission === "granted") {
+                const payload = getNotifPayload();
+                triggerNativeNotification(payload.title, payload.body);
+            }
+        @endif
     });
 </script>
 @endpush

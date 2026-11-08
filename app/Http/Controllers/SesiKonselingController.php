@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\OrangTua;
 use App\Models\SesiKonseling;
 use App\Models\User;
+use App\Notifications\StatusKonselingNotification;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -66,8 +67,11 @@ class SesiKonselingController extends Controller
             'hasil' => !empty($validated['keluhan']) ? 'Keluhan awal: ' . $validated['keluhan'] : null,
         ]);
 
+        $this->kirimNotifikasiStatus($sesi, 'diajukan');
+
         return redirect()->route('konseling.index')
-            ->with('success', 'Pengajuan sesi konseling gizi berhasil dikirim dan menunggu penjadwalan nakes.');
+            ->with('success', 'Pengajuan sesi konseling gizi berhasil dikirim dan menunggu penjadwalan nakes.')
+            ->with('status_notifikasi', 'Notifikasi status diajukan telah terkirim ke orang tua.');
     }
 
     /**
@@ -171,8 +175,11 @@ class SesiKonselingController extends Controller
             'status' => 'dijadwalkan',
         ]);
 
+        $this->kirimNotifikasiStatus($sesi->fresh(['orangTua.user', 'orangTua.balita', 'nakes']), 'dijadwalkan');
+
         return redirect()->route('konseling.show', $sesi->id)
-            ->with('success', 'Sesi konseling berhasil dijadwalkan bersama tenaga kesehatan.');
+            ->with('success', 'Sesi konseling berhasil dijadwalkan bersama tenaga kesehatan.')
+            ->with('status_notifikasi', 'Notifikasi jadwal konseling telah dikirimkan ke orang tua.');
     }
 
     /**
@@ -191,8 +198,11 @@ class SesiKonselingController extends Controller
             'status' => 'selesai',
         ]);
 
+        $this->kirimNotifikasiStatus($sesi->fresh(['orangTua.user', 'orangTua.balita', 'nakes']), 'selesai');
+
         return redirect()->route('konseling.show', $sesi->id)
-            ->with('success', 'Konsultasi selesai dan hasil konseling telah berhasil dicatat.');
+            ->with('success', 'Konsultasi selesai dan hasil konseling telah berhasil dicatat.')
+            ->with('status_notifikasi', 'Notifikasi penyelesaian konseling telah dikirimkan ke orang tua.');
     }
 
     /**
@@ -205,5 +215,21 @@ class SesiKonselingController extends Controller
 
         return redirect()->route('konseling.index')
             ->with('success', 'Data sesi konseling berhasil dihapus.');
+    }
+
+    /**
+     * Mengirimkan notifikasi perubahan status sesi konseling ke pihak terkait (KF-49 / SCRUM-181).
+     */
+    protected function kirimNotifikasiStatus(SesiKonseling $sesi, string $status): void
+    {
+        $notification = new StatusKonselingNotification($sesi, $status);
+
+        if ($sesi->orangTua) {
+            $sesi->orangTua->notify($notification);
+
+            if ($sesi->orangTua->user) {
+                $sesi->orangTua->user->notify($notification);
+            }
+        }
     }
 }
