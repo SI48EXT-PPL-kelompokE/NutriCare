@@ -21,7 +21,7 @@
     <!-- TABS -->
     <div class="flex items-center gap-8 border-b border-slate-200">
         <!-- Tab 1: Daftar Balita -->
-        <a href="#" class="pb-3 text-sm font-semibold text-slate-500 hover:text-slate-800 transition-colors flex items-center gap-2">
+        <a href="{{ route('kependudukan.balita.index') }}" class="pb-3 text-sm font-semibold text-slate-500 hover:text-slate-800 transition-colors flex items-center gap-2">
             <span>Daftar Balita</span>
             <span class="px-2 py-0.5 text-xs font-semibold bg-slate-100 text-slate-600 rounded-full">
                 {{ $totalBalita > 0 ? $totalBalita : 142 }}

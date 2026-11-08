@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BalitaViewController;
 use App\Http\Controllers\OrangTuaViewController;
 use App\Http\Controllers\PaketPmtController;
 use Illuminate\Support\Facades\Route;
@@ -16,10 +17,13 @@ Route::prefix('pmt')->name('pmt.')->group(function () {
     Route::resource('paket', PaketPmtController::class);
 });
 
-// Modul Kependudukan - Orang Tua (dari branch adhani)
+// Modul Kependudukan - Data Balita & Orang Tua (branch adhani)
 Route::prefix('kependudukan')->name('kependudukan.')->group(function () {
+    Route::get('balita', [BalitaViewController::class, 'index'])->name('balita.index');
+    Route::get('balita/{balita}', [BalitaViewController::class, 'show'])->name('balita.show');
     Route::get('orang-tua', [OrangTuaViewController::class, 'index'])->name('orang-tua.index');
 });
 
 // Legacy redirect
 Route::redirect('/orang-tua', '/kependudukan/orang-tua');
+Route::redirect('/balita', '/kependudukan/balita');

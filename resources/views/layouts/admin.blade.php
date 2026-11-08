@@ -97,7 +97,7 @@
                     </a>
 
                     <!-- Data Balita & Kependudukan (Active) -->
-                    <a href="{{ route('kependudukan.orang-tua.index') }}" class="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-[#008f7a] bg-[#ecfdf5] rounded-xl transition-colors">
+                    <a href="{{ route('kependudukan.balita.index') }}" class="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-[#008f7a] bg-[#ecfdf5] rounded-xl transition-colors">
                         <svg class="w-5 h-5 text-[#008f7a]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="12" cy="12" r="10"/>
                             <path d="M8 14s1.5 2 4 2 4-2 4-2"/>

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\BalitaController;
 use App\Http\Controllers\Api\OrangTuaController;
 use Illuminate\Support\Facades\Route;
 
@@ -15,4 +16,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::apiResource('orang-tua', OrangTuaController::class);
+Route::apiResource('balita', BalitaController::class)->parameters([
+    'balita' => 'balita',
+]);
 
