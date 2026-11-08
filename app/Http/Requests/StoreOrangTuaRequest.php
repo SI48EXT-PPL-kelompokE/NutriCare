@@ -25,10 +25,12 @@ class StoreOrangTuaRequest extends FormRequest
         return [
             // Data Utama Orang Tua
             'nik' => [
+                'bail',
                 'required',
-                'numeric',
-                'digits:16',
-                'unique:orang_tua,nik',
+                'string',
+                'size:16',
+                'regex:/^[0-9]{16}$/',
+                Rule::unique('orang_tua', 'nik'),
             ],
             'name' => [
                 'required',
@@ -94,8 +96,9 @@ class StoreOrangTuaRequest extends FormRequest
     {
         return [
             'nik.required' => 'NIK wajib diisi.',
-            'nik.numeric' => 'NIK harus berupa deretan angka.',
-            'nik.digits' => 'NIK harus tepat berjumlah 16 digit.',
+            'nik.string' => 'NIK harus berupa teks string.',
+            'nik.size' => 'NIK harus tepat berjumlah 16 digit.',
+            'nik.regex' => 'NIK harus terdiri dari 16 digit angka (0-9).',
             'nik.unique' => 'NIK sudah terdaftar dalam sistem.',
             'name.required' => 'Nama lengkap wajib diisi.',
             'alamat.required' => 'Alamat wajib diisi.',
