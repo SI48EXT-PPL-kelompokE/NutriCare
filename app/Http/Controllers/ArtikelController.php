@@ -30,10 +30,13 @@ class ArtikelController extends Controller
                 }
             })
             ->latest('id')
-            ->paginate(10)
+            ->paginate(7)
             ->withQueryString();
 
-        return view('edukasi.artikel.index', compact('artikels', 'kategoriList'));
+        $totalArtikel = Artikel::count();
+        $totalPengaduan = class_exists(\App\Models\Pengaduan::class) ? \App\Models\Pengaduan::count() : 14;
+
+        return view('edukasi.artikel.index', compact('artikels', 'kategoriList', 'totalArtikel', 'totalPengaduan'));
     }
 
     public function create()
@@ -148,6 +151,53 @@ class ArtikelController extends Controller
         return redirect()
             ->route('edukasi.artikel.index')
             ->with('success', 'Artikel edukasi berhasil dihapus.');
+    }
+
+    public function export(Request $request)
+    {
+        $fileName = 'laporan_artikel_edukasi_' . date('Ymd_His') . '.csv';
+
+        $artikels = Artikel::with('penulis')
+            ->search($request->query('q'))
+            ->kategori($request->query('kategori'))
+            ->when($request->query('status'), function ($query, $status) {
+                if ($status === 'published') {
+                    $query->published();
+                } elseif ($status === 'draft') {
+                    $query->draft();
+                }
+            })
+            ->latest('id')
+            ->get();
+
+        $headers = [
+            'Content-type'        => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename={$fileName}",
+            'Pragma'              => 'no-cache',
+            'Cache-Control'       => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires'             => '0',
+        ];
+
+        $callback = function () use ($artikels) {
+            $file = fopen('php://output', 'w');
+            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
+            fputcsv($file, ['ID', 'Judul Artikel', 'Kategori', 'Status', 'Penulis', 'Tanggal Publikasi', 'Dibuat Pada']);
+
+            foreach ($artikels as $artikel) {
+                fputcsv($file, [
+                    $artikel->id,
+                    $artikel->judul,
+                    $artikel->kategori,
+                    ucfirst($artikel->status),
+                    $artikel->penulis->name ?? 'Admin NutriCare',
+                    $artikel->published_at ? $artikel->published_at->format('d M Y H:i') : '-',
+                    $artikel->created_at->format('d M Y H:i'),
+                ]);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     private function sanitizeHtml(string $html): string

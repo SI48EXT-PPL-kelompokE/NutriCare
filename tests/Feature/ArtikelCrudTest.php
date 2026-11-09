@@ -278,5 +278,29 @@ class ArtikelCrudTest extends TestCase
 
         $response->assertStatus(404);
     }
+
+    /**
+     * Memastikan fungsi ekspor laporan artikel edukasi menghasilkan file streaming CSV dengan header valid.
+     */
+    public function test_ekspor_laporan_artikel_menghasilkan_file_csv(): void
+    {
+        $user = User::first() ?? User::factory()->create();
+
+        Artikel::create([
+            'user_id' => $user->id,
+            'judul' => 'Artikel Uji Ekspor Laporan',
+            'kategori' => 'MPASI Sehat',
+            'status' => 'published',
+            'url_slug' => 'artikel-uji-ekspor-laporan',
+            'konten' => '<p>Konten untuk pengujian ekspor laporan ke format CSV.</p>',
+            'published_at' => now(),
+        ]);
+
+        $response = $this->get(route('edukasi.artikel.export'));
+
+        $response->assertStatus(200);
+        $response->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
+        $this->assertStringContainsString('attachment; filename=laporan_artikel_edukasi_', (string)$response->headers->get('Content-Disposition'));
+    }
 }
 
