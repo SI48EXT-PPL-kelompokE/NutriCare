@@ -11,6 +11,14 @@ class SesiKonseling extends Model
 
     protected $table = 'sesi_konseling';
 
+    public const TOPIK_LIST = [
+        'Konseling Gizi Balita',
+        'MPASI dan Pola Makan Sehat',
+        'Gizi Ibu Hamil',
+        'Stimulasi Tumbuh Kembang',
+        'Pencegahan Stunting',
+    ];
+
     protected $fillable = [
         'orang_tua_id',
         'user_id',
@@ -25,6 +33,42 @@ class SesiKonseling extends Model
         return [
             'jadwal' => 'datetime',
         ];
+    }
+
+    public function scopeStatus($query, ?string $status)
+    {
+        if (!empty($status) && $status !== 'all') {
+            return $query->where('status', $status);
+        }
+
+        return $query;
+    }
+
+    public function scopeTopik($query, ?string $topik)
+    {
+        if (!empty($topik) && $topik !== 'all') {
+            return $query->where('topik', $topik);
+        }
+
+        return $query;
+    }
+
+    public function scopeSearch($query, ?string $keyword)
+    {
+        if (!empty($keyword)) {
+            return $query->where(function ($q) use ($keyword) {
+                $q->where('topik', 'like', "%{$keyword}%")
+                  ->orWhereHas('orangTua', function ($sub) use ($keyword) {
+                      $sub->where('name', 'like', "%{$keyword}%")
+                          ->orWhere('nik', 'like', "%{$keyword}%");
+                  })
+                  ->orWhereHas('nakes', function ($sub) use ($keyword) {
+                      $sub->where('name', 'like', "%{$keyword}%");
+                  });
+            });
+        }
+
+        return $query;
     }
 
     public function orangTua()
