@@ -15,7 +15,7 @@
             </nav>
             <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Edukasi & Layanan Warga</h1>
             <p class="text-xs text-slate-500 mt-1">
-                Kelola artikel edukasi gizi dan tindak lanjut pengaduan warga. Kelola materi edukasi pencegahan stunting dan pola gizi balita untuk masyarakat.
+                Kelola artikel edukasi gizi dan tindak lanjut pengaduan warga.
             </p>
         </div>
 
@@ -27,7 +27,7 @@
                     <line x1="12" y1="5" x2="12" y2="19"></line>
                     <line x1="5" y1="12" x2="19" y2="12"></line>
                 </svg>
-                <span>+ Tulis Artikel Baru</span>
+                <span>Tulis Artikel Baru</span>
             </a>
         </div>
     </div>
@@ -44,7 +44,7 @@
         </a>
 
         <!-- Tab 2: Pengaduan Warga (Sprint 3) -->
-        <a href="{{ Route::has('pengaduan.index') ? route('pengaduan.index') : '#' }}" 
+        <a href="{{ Route::has('edukasi.pengaduan.index') ? route('edukasi.pengaduan.index') : '#' }}" 
            class="inline-flex items-center gap-2.5 pb-3 text-slate-400 font-semibold hover:text-slate-700 transition-colors">
             <span>Pengaduan Warga</span>
             <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600">
@@ -111,13 +111,6 @@
                 </select>
             </div>
 
-            <!-- Tombol Filter & Reset -->
-            <button type="submit" id="btnFilter" class="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-[#005953] hover:bg-[#004742] text-white text-xs font-semibold rounded-xl transition-colors shadow-2xs">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
-                </svg>
-                <span>Filter</span>
-            </button>
             @if(request('q') || request('kategori') || request('status'))
                 <a href="{{ route('edukasi.artikel.index') }}" class="px-2.5 py-2 text-xs text-slate-400 hover:text-slate-600 transition-colors">
                     Reset

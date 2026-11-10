@@ -21,7 +21,7 @@ class ArtikelManagementTest extends DuskTestCase
                 ->assertPresent('#filterKategori')
                 ->assertPresent('#filterStatus')
                 ->type('#searchInput', 'Stunting')
-                ->press('#btnFilter')
+                ->keys('#searchInput', '{enter}')
                 ->assertQueryStringHas('q', 'Stunting');
         });
     }
