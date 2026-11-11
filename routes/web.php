@@ -32,6 +32,12 @@ Route::prefix('pmt')->name('pmt.')->group(function () {
     Route::resource('paket', PaketPmtController::class);
 });
 
+// Modul KMS Digital - KF-13: CRUD Pengukuran Balita (KMS)
+// TODO: tambahkan middleware auth dan role (nakes, kader) setelah autentikasi (Adhani) tersedia
+Route::resource('kms', \App\Http\Controllers\PengukuranKmsController::class)->parameters([
+    'kms' => 'kms'
+]);
+
 // Modul KMS Digital - KF-17: CRUD Riwayat Imunisasi
 // TODO: tambahkan middleware auth dan role (nakes, kader) setelah autentikasi (Adhani) tersedia
 Route::resource('imunisasi', ImunisasiController::class)->parameters([
