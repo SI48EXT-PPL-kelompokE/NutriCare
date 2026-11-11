@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ArtikelController;
+use App\Http\Controllers\ImunisasiController;
 use App\Http\Controllers\OrangTuaViewController;
 use App\Http\Controllers\PaketPmtController;
 use App\Http\Controllers\SesiKonselingController;
@@ -30,6 +31,12 @@ Route::prefix('pmt')->name('pmt.')->group(function () {
     Route::patch('paket/{paket}/toggle-status', [PaketPmtController::class, 'toggleStatus'])->name('paket.toggle-status');
     Route::resource('paket', PaketPmtController::class);
 });
+
+// Modul KMS Digital - KF-17: CRUD Riwayat Imunisasi
+// TODO: tambahkan middleware auth dan role (nakes, kader) setelah autentikasi (Adhani) tersedia
+Route::resource('imunisasi', ImunisasiController::class)->parameters([
+    'imunisasi' => 'imunisasi'
+]);
 
 // Modul Kependudukan - Orang Tua (dari branch adhani)
 Route::prefix('kependudukan')->name('kependudukan.')->group(function () {
