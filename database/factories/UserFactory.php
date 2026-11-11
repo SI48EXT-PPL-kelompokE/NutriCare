@@ -23,7 +23,11 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        // Ambil role acak atau default ke role pertama
+        $role = \App\Models\Role::inRandomOrder()->first() ?? \App\Models\Role::first();
+
         return [
+            'role_id' => $role?->id ?? 1,
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'password' => static::$password ??= Hash::make('password'),

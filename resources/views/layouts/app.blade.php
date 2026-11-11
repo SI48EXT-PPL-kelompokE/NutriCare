@@ -52,11 +52,16 @@
                         </a>
 
                         <!-- KMS Digital -->
-                        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors">
-                            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
-                            </svg>
-                            <span>KMS Digital</span>
+                        <a href="{{ route('kms.index') }}" class="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs {{ request()->routeIs('kms.*') || request()->routeIs('imunisasi.*') ? 'font-bold text-teal-700 bg-teal-50/80 border-l-4 border-teal-600' : 'font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50' }} transition-colors">
+                            <div class="flex items-center gap-3">
+                                <svg class="w-4 h-4 {{ request()->routeIs('kms.*') || request()->routeIs('imunisasi.*') ? 'text-teal-600' : 'text-slate-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
+                                </svg>
+                                <span>KMS Digital</span>
+                            </div>
+                            @if(request()->routeIs('kms.*') || request()->routeIs('imunisasi.*'))
+                                <span class="w-1.5 h-1.5 rounded-full bg-teal-600"></span>
+                            @endif
                         </a>
 
                         <!-- Logistik PMT (ACTIVE SPRINT MENU) -->
