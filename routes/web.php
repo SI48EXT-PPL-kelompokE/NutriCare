@@ -3,6 +3,7 @@
 use App\Http\Controllers\ArtikelController;
 use App\Http\Controllers\OrangTuaViewController;
 use App\Http\Controllers\PaketPmtController;
+use App\Http\Controllers\PengaduanController;
 use App\Http\Controllers\SesiKonselingController;
 use Illuminate\Support\Facades\Route;
 
@@ -11,11 +12,15 @@ Route::get('/', function () {
     return redirect()->route('pmt.paket.index');
 });
 
-// Modul Edukasi & Layanan Warga - PBI 15: Artikel & Panduan Edukasi
+// Modul Edukasi & Layanan Warga - PBI 15 & 17
 Route::prefix('edukasi')->name('edukasi.')->group(function () {
     Route::get('artikel/export', [ArtikelController::class, 'export'])->name('artikel.export');
     Route::get('artikel/baca/{slug}', [ArtikelController::class, 'baca'])->name('artikel.baca');
     Route::resource('artikel', ArtikelController::class);
+
+    Route::get('pengaduan/export', [PengaduanController::class, 'export'])->name('pengaduan.export');
+    Route::patch('pengaduan/{pengaduan}/tanggapi', [PengaduanController::class, 'tanggapi'])->name('pengaduan.tanggapi');
+    Route::resource('pengaduan', PengaduanController::class);
 });
 
 // Modul Layanan Warga - PBI 16: Konseling Gizi Balita
