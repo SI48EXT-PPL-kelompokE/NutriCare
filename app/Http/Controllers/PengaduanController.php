@@ -99,7 +99,7 @@ class PengaduanController extends Controller
 
         $adminId = auth()->id() ?? User::whereHas('role', function ($q) {
             $q->where('name_role', 'like', '%Admin%');
-        })->value('id') ?? User::first()->id;
+        })->value('id') ?? User::first()?->id;
 
         $pengaduan->update([
             'status' => $validated['status'],
