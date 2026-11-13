@@ -50,6 +50,7 @@ class PaketPmtController extends Controller
         }
 
         $pakets = $query->latest()->paginate(9)->withQueryString();
+        $barangs = BarangPmt::orderBy('nama')->get();
 
         // Statistik Ringkas untuk Dashboard PMT
         $stats = [
@@ -59,7 +60,7 @@ class PaketPmtController extends Controller
             'avg_calories' => round((float) PaketPmt::where('status', true)->avg('total_energi_kcal'), 1),
         ];
 
-        return view('pmt.paket.index', compact('pakets', 'stats'));
+        return view('pmt.paket.index', compact('pakets', 'stats', 'barangs'));
     }
 
     /**

@@ -23,9 +23,9 @@ class PaketPmtCrudTest extends TestCase
         $response = $this->get(route('pmt.paket.index'));
 
         $response->assertStatus(200);
-        $response->assertSee('Master Paket PMT');
+        $response->assertSee('Master Paket');
         $response->assertSee('PMT Pemulihan 6-23 Bulan');
-        $response->assertSee('Tambah Paket Baru');
+        $response->assertSee('Buat Paket PMT Baru');
     }
 
     public function test_create_page_loads_successfully(): void

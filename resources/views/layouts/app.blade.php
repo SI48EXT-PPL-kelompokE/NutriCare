@@ -181,48 +181,52 @@
         <!-- MAIN PAGE CONTAINER -->
         <main class="flex-1 p-6 sm:p-8 max-w-7xl w-full mx-auto space-y-6">
 
-            <!-- Breadcrumbs (Sesuai Mockup) -->
-            <div class="flex items-center gap-2 text-xs font-medium text-slate-400">
-                <a href="#" class="hover:text-slate-600">Data Posyandu</a>
-                <span>/</span>
-                <a href="#" class="hover:text-slate-600">Logistik & Farmasi</a>
-                <span>/</span>
-                <span class="text-slate-700 font-semibold">Logistik PMT</span>
-            </div>
+            @hasSection('header')
+                @yield('header')
+            @else
+                <!-- Breadcrumbs (Sesuai Mockup) -->
+                <div class="flex items-center gap-2 text-xs font-medium text-slate-400">
+                    <a href="#" class="hover:text-slate-600">Data Posyandu</a>
+                    <span>/</span>
+                    <a href="#" class="hover:text-slate-600">Logistik & Farmasi</a>
+                    <span>/</span>
+                    <span class="text-slate-700 font-semibold">Logistik PMT</span>
+                </div>
 
-            <!-- Header Section (Sesuai Mockup) -->
-            <div>
-                <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Logistik PMT</h1>
-                <p class="text-xs text-slate-500 mt-1">Puskesmas Kecamatan Sukajadi - Gudang Farmasi & Distribusi Posyandu</p>
-            </div>
+                <!-- Header Section (Sesuai Mockup) -->
+                <div>
+                    <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Logistik PMT</h1>
+                    <p class="text-xs text-slate-500 mt-1">Puskesmas Kecamatan Sukajadi - Gudang Farmasi & Distribusi Posyandu</p>
+                </div>
 
-            <!-- Subnavigation Tabs (Sesuai Mockup) -->
-            <div class="flex items-center gap-2 border-b border-slate-200 text-xs font-semibold text-slate-500 pb-px">
-                <!-- Tab Stok Gudang (Sprint 2) -->
-                <span class="inline-flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-slate-400 cursor-not-allowed">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-                    </svg>
-                    <span>Stok Gudang</span>
-                </span>
+                <!-- Subnavigation Tabs (Sesuai Mockup) -->
+                <div class="flex items-center gap-2 border-b border-slate-200 text-xs font-semibold text-slate-500 pb-px">
+                    <!-- Tab Stok Gudang (Sprint 2) -->
+                    <span class="inline-flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-slate-400 cursor-not-allowed">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                        </svg>
+                        <span>Stok Gudang</span>
+                    </span>
 
-                <!-- Tab Master Paket PMT (ACTIVE - PBI 8) -->
-                <a href="{{ route('pmt.paket.index') }}" 
-                   class="inline-flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-teal-700 font-bold border-b-2 border-teal-600 bg-white transition-colors">
-                    <svg class="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                    </svg>
-                    <span>Master Paket (Aktif)</span>
-                </a>
+                    <!-- Tab Master Paket PMT (ACTIVE - PBI 8) -->
+                    <a href="{{ route('pmt.paket.index') }}" 
+                       class="inline-flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-teal-700 font-bold border-b-2 border-teal-600 bg-white transition-colors">
+                        <svg class="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                        </svg>
+                        <span>Master Paket (Aktif)</span>
+                    </a>
 
-                <!-- Tab Riwayat Distribusi (Sprint 3) -->
-                <span class="inline-flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-slate-400 cursor-not-allowed">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
-                    </svg>
-                    <span>Riwayat Distribusi</span>
-                </span>
-            </div>
+                    <!-- Tab Riwayat Distribusi (Sprint 3) -->
+                    <span class="inline-flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-slate-400 cursor-not-allowed">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                        </svg>
+                        <span>Riwayat Distribusi</span>
+                    </span>
+                </div>
+            @endif
 
             <!-- Flash Notifications -->
             @if (session('success'))
