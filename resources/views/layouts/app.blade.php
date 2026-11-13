@@ -6,42 +6,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Logistik PMT') - NutriCare</title>
     
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- Tailwind CSS CDN for guaranteed rendering -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-                    },
-                    colors: {
-                        teal: {
-                            50: '#f0fdfa',
-                            100: '#ccfbf1',
-                            500: '#14b8a6',
-                            600: '#0d9488',
-                            700: '#0f766e',
-                            800: '#115e59',
-                            900: '#134e4a',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-
-    <style>
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #f8fafc;
-        }
-    </style>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @stack('styles')
 </head>
 <body class="min-h-screen flex antialiased text-slate-800">
 
@@ -86,22 +52,29 @@
                         </a>
 
                         <!-- KMS Digital -->
-                        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors">
-                            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
-                            </svg>
-                            <span>KMS Digital</span>
+                        <a href="{{ route('kms.index') }}" class="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs {{ request()->routeIs('kms.*') || request()->routeIs('imunisasi.*') ? 'font-bold text-teal-700 bg-teal-50/80 border-l-4 border-teal-600' : 'font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50' }} transition-colors">
+                            <div class="flex items-center gap-3">
+                                <svg class="w-4 h-4 {{ request()->routeIs('kms.*') || request()->routeIs('imunisasi.*') ? 'text-teal-600' : 'text-slate-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
+                                </svg>
+                                <span>KMS Digital</span>
+                            </div>
+                            @if(request()->routeIs('kms.*') || request()->routeIs('imunisasi.*'))
+                                <span class="w-1.5 h-1.5 rounded-full bg-teal-600"></span>
+                            @endif
                         </a>
 
                         <!-- Logistik PMT (ACTIVE SPRINT MENU) -->
-                        <a href="{{ route('pmt.paket.index') }}" class="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold text-teal-700 bg-teal-50/80 border-l-4 border-teal-600 transition-colors">
+                        <a href="{{ route('pmt.paket.index') }}" class="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs {{ request()->routeIs('pmt.*') ? 'font-bold text-teal-700 bg-teal-50/80 border-l-4 border-teal-600' : 'font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50' }} transition-colors">
                             <div class="flex items-center gap-3">
-                                <svg class="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 {{ request()->routeIs('pmt.*') ? 'text-teal-600' : 'text-slate-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
                                 </svg>
                                 <span>Logistik PMT</span>
                             </div>
-                            <span class="w-1.5 h-1.5 rounded-full bg-teal-600"></span>
+                            @if(request()->routeIs('pmt.*'))
+                                <span class="w-1.5 h-1.5 rounded-full bg-teal-600"></span>
+                            @endif
                         </a>
 
                         <!-- Jadwal & Rujukan -->
@@ -113,11 +86,16 @@
                         </a>
 
                         <!-- Artikel & Pengaduan -->
-                        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors">
-                            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                            </svg>
-                            <span>Artikel & Pengaduan</span>
+                        <a href="{{ route('edukasi.artikel.index') }}" class="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs {{ request()->routeIs('edukasi.*') ? 'font-bold text-teal-700 bg-teal-50/80 border-l-4 border-teal-600' : 'font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50' }} transition-colors">
+                            <div class="flex items-center gap-3">
+                                <svg class="w-4 h-4 {{ request()->routeIs('edukasi.*') ? 'text-teal-600' : 'text-slate-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                <span>Artikel & Pengaduan</span>
+                            </div>
+                            @if(request()->routeIs('edukasi.*'))
+                                <span class="w-1.5 h-1.5 rounded-full bg-teal-600"></span>
+                            @endif
                         </a>
 
                         <!-- Pengaturan -->
