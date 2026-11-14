@@ -8,13 +8,13 @@
     
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')
+    @stack('head')
 </head>
 <body class="min-h-screen flex antialiased text-slate-800">
 
     <!-- LEFT SIDEBAR (Sesuaikan dengan Mockup) -->
-    <aside class="w-64 bg-white border-r border-slate-200 shrink-0 hidden md:flex flex-col justify-between sticky top-0 h-screen z-30">
-        <div>
-            <!-- Logo Section -->
+    <x-sidebar variant="compact">
+        <x-slot:brand>
             <div class="h-20 flex items-center px-6 border-b border-slate-100">
                 <a href="{{ route('pmt.paket.index') }}" class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-xl bg-teal-600 flex items-center justify-center text-white shadow-md shadow-teal-600/20">
@@ -28,122 +28,34 @@
                     </div>
                 </a>
             </div>
-
-            <!-- Navigation Links -->
-            <div class="p-4 space-y-6">
-                <div>
-                    <span class="text-[10px] font-bold tracking-wider text-slate-400 uppercase px-3 block mb-2">Navigasi Klinis</span>
-                    <nav class="space-y-1">
-                        
-                        <!-- Dashboard -->
-                        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors">
-                            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
-                            </svg>
-                            <span>Dashboard</span>
-                        </a>
-
-                        <!-- Data Balita -->
-                        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors">
-                            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-                            </svg>
-                            <span>Data Balita</span>
-                        </a>
-
-                        <!-- KMS Digital -->
-                        <a href="{{ route('kms.index') }}" class="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs {{ request()->routeIs('kms.*') || request()->routeIs('imunisasi.*') ? 'font-bold text-teal-700 bg-teal-50/80 border-l-4 border-teal-600' : 'font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50' }} transition-colors">
-                            <div class="flex items-center gap-3">
-                                <svg class="w-4 h-4 {{ request()->routeIs('kms.*') || request()->routeIs('imunisasi.*') ? 'text-teal-600' : 'text-slate-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
-                                </svg>
-                                <span>KMS Digital</span>
-                            </div>
-                            @if(request()->routeIs('kms.*') || request()->routeIs('imunisasi.*'))
-                                <span class="w-1.5 h-1.5 rounded-full bg-teal-600"></span>
-                            @endif
-                        </a>
-
-                        <!-- Logistik PMT (ACTIVE SPRINT MENU) -->
-                        <a href="{{ route('pmt.paket.index') }}" class="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs {{ request()->routeIs('pmt.*') ? 'font-bold text-teal-700 bg-teal-50/80 border-l-4 border-teal-600' : 'font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50' }} transition-colors">
-                            <div class="flex items-center gap-3">
-                                <svg class="w-4 h-4 {{ request()->routeIs('pmt.*') ? 'text-teal-600' : 'text-slate-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                                </svg>
-                                <span>Logistik PMT</span>
-                            </div>
-                            @if(request()->routeIs('pmt.*'))
-                                <span class="w-1.5 h-1.5 rounded-full bg-teal-600"></span>
-                            @endif
-                        </a>
-
-                        <!-- Jadwal & Rujukan -->
-                        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors">
-                            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                            </svg>
-                            <span>Jadwal & Rujukan</span>
-                        </a>
-
-                        <!-- Artikel & Pengaduan -->
-                        <a href="{{ route('edukasi.artikel.index') }}" class="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs {{ request()->routeIs('edukasi.*') ? 'font-bold text-teal-700 bg-teal-50/80 border-l-4 border-teal-600' : 'font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50' }} transition-colors">
-                            <div class="flex items-center gap-3">
-                                <svg class="w-4 h-4 {{ request()->routeIs('edukasi.*') ? 'text-teal-600' : 'text-slate-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                </svg>
-                                <span>Artikel & Pengaduan</span>
-                            </div>
-                            @if(request()->routeIs('edukasi.*'))
-                                <span class="w-1.5 h-1.5 rounded-full bg-teal-600"></span>
-                            @endif
-                        </a>
-
-                        <!-- Pengaturan -->
-                        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors">
-                            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                            </svg>
-                            <span>Pengaturan</span>
-                        </a>
-
-                    </nav>
+        </x-slot:brand>
+        <x-slot:footer>
+            <div class="p-4 border-t border-slate-100">
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-teal-100 text-teal-800 font-bold flex items-center justify-center text-xs">
+                        {{ mb_strtoupper(mb_substr(auth()->user()?->name ?? 'NutriCare', 0, 2)) }}
+                    </div>
+                    <div class="overflow-hidden">
+                        <span class="text-xs font-bold text-slate-800 block truncate">{{ auth()->user()?->name ?? 'NutriCare' }}</span>
+                        <span class="text-[10px] text-teal-700 font-semibold block">{{ auth()->user()?->role?->name_role ?? 'Portal Edukasi' }}</span>
+                    </div>
                 </div>
             </div>
-        </div>
-
-        <!-- Sidebar Footer -->
-        <div class="p-4 border-t border-slate-100">
-            <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full bg-teal-100 text-teal-800 font-bold flex items-center justify-center text-xs">
-                    FY
-                </div>
-                <div class="overflow-hidden">
-                    <span class="text-xs font-bold text-slate-800 block truncate">Muhammad Fadilyas</span>
-                    <span class="text-[10px] text-teal-700 font-semibold block">Kader Posyandu</span>
-                </div>
-            </div>
-        </div>
-    </aside>
+        </x-slot:footer>
+    </x-sidebar>
 
     <!-- RIGHT CONTENT AREA -->
     <div class="flex-1 flex flex-col min-w-0">
 
         <!-- TOP BAR (Sesuaikan dengan Mockup) -->
         <header class="bg-white border-b border-slate-200 h-20 px-6 sm:px-8 flex items-center justify-between gap-4 sticky top-0 z-20">
-            <!-- Global Search Bar -->
-            <div class="flex-1 max-w-lg relative">
-                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                </div>
-                <input type="text" placeholder="Cari NIK, nama balita, atau Posyandu..." 
-                       class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all">
-            </div>
+            <x-search-form :action="route('kependudukan.balita.index')" role="search" aria-label="Pencarian Balita dari header" class="flex min-w-0 max-w-lg flex-1 items-center gap-2">
+                <x-search-input placeholder="Cari nama balita atau NIK orang tua..." wrapper-class="min-w-0 flex-1" />
+                <button type="submit" class="hidden rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:inline-flex">Cari</button>
+            </x-search-form>
 
             <!-- Top Right Action Controls -->
-            <div class="flex items-center gap-4">
+            <div class="ml-auto flex items-center gap-4">
                 <!-- Ekspor Dropdown Button -->
                 <button type="button" class="hidden sm:inline-flex items-center gap-2 px-3.5 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all">
                     <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -168,11 +80,11 @@
                 <!-- User Profile Header -->
                 <div class="flex items-center gap-3 pl-2 border-l border-slate-200">
                     <div class="w-9 h-9 rounded-full bg-teal-600 text-white font-bold flex items-center justify-center text-xs shadow-xs">
-                        SR
+                        {{ mb_strtoupper(mb_substr(auth()->user()?->name ?? 'NutriCare', 0, 2)) }}
                     </div>
                     <div class="hidden lg:block text-left">
-                        <span class="text-xs font-bold text-slate-800 block">dr. Siti Rahmawati</span>
-                        <span class="text-[10px] text-slate-400 block font-medium">Kepala Puskesmas</span>
+                        <span class="text-xs font-bold text-slate-800 block">{{ auth()->user()?->name ?? 'NutriCare' }}</span>
+                        <span class="text-[10px] text-slate-400 block font-medium">{{ auth()->user()?->role?->name_role ?? 'Portal Edukasi' }}</span>
                     </div>
                 </div>
             </div>
@@ -181,6 +93,7 @@
         <!-- MAIN PAGE CONTAINER -->
         <main class="flex-1 p-6 sm:p-8 max-w-7xl w-full mx-auto space-y-6">
 
+            @if (request()->routeIs('pmt.*'))
             <!-- Breadcrumbs (Sesuai Mockup) -->
             <div class="flex items-center gap-2 text-xs font-medium text-slate-400">
                 <a href="#" class="hover:text-slate-600">Data Posyandu</a>
@@ -223,6 +136,7 @@
                     <span>Riwayat Distribusi</span>
                 </span>
             </div>
+            @endif
 
             <!-- Flash Notifications -->
             @if (session('success'))
@@ -243,6 +157,10 @@
                 </div>
             @endif
 
+            @if (session('session_status'))
+                <p role="status" class="rounded-xl border border-teal-200 bg-teal-50 p-4 text-sm text-teal-800">{{ session('session_status') }}</p>
+            @endif
+
             @yield('content')
 
         </main>
@@ -252,9 +170,11 @@
             <div>
                 &copy; {{ date('Y') }} NutriCare Kelompok E &bull; PPL Ekstensi Telkom University
             </div>
+            @if (request()->routeIs('pmt.*'))
             <div>
                 Modul Logistik PMT &bull; Pengembang: <strong>Muhammad Fadilyas</strong>
             </div>
+            @endif
         </footer>
 
     </div>
