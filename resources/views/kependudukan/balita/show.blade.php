@@ -1,5 +1,7 @@
 @extends('layouts.admin')
 
+@section('title', 'Detail Balita')
+
 @section('content')
 <div class="space-y-6 max-w-4xl">
 
@@ -15,7 +17,7 @@
     <!-- HEADER & ACTIONS -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-            <h2 class="text-2xl font-bold text-slate-900 tracking-tight">{{ $balita->name }}</h2>
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">{{ $balita->name }}</h1>
             <p class="text-xs text-slate-500 mt-1">Informasi identitas dasar balita dan data orang tua terkait.</p>
         </div>
 
@@ -30,10 +32,11 @@
                 <span>Kembali</span>
             </a>
 
+            @can('access-module', ['balita', 'edit'])
             <button
                 type="button"
                 onclick="openEditModal()"
-                class="inline-flex items-center gap-2 px-4 py-2 bg-[#005953] hover:bg-[#004742] text-white rounded-xl text-xs font-semibold transition-colors shadow-sm"
+                class="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-semibold transition-colors shadow-sm"
             >
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 20h9"/>
@@ -41,6 +44,7 @@
                 </svg>
                 <span>Edit Data Balita</span>
             </button>
+            @endcan
         </div>
     </div>
 
@@ -66,7 +70,7 @@
                 </div>
                 <div class="flex justify-between py-1.5 border-b border-slate-50">
                     <dt class="text-slate-500 font-medium">Usia Balita</dt>
-                    <dd class="text-[#008f7a] font-bold">{{ \App\Http\Resources\BalitaResource::formatUsia($balita->birth_date) }}</dd>
+                    <dd class="text-teal-700 font-bold">{{ \App\Http\Resources\BalitaResource::formatUsia($balita->birth_date) }}</dd>
                 </div>
                 <div class="flex justify-between py-1.5 border-b border-slate-50">
                     <dt class="text-slate-500 font-medium">Jenis Kelamin</dt>
@@ -85,7 +89,7 @@
         <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
             <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                 <h3 class="text-sm font-bold text-slate-900">Orang Tua Terkait</h3>
-                <span class="px-2.5 py-0.5 rounded-full bg-[#e6f7f5] text-[#008f7a] text-[11px] font-bold">
+                <span class="px-2.5 py-0.5 rounded-full bg-teal-50 text-teal-700 text-[11px] font-bold">
                     Terhubung
                 </span>
             </div>
@@ -117,7 +121,7 @@
 </div>
 
 <!-- MODAL EDIT DATA BALITA -->
-<div id="modalEditBalita" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+<div id="modalEditBalita" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/50 backdrop-blur-sm items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-[460px] w-full p-7 shadow-2xl border border-slate-100 relative">
         <div class="flex items-center justify-between pb-4">
             <h3 class="text-xl font-bold text-slate-900 tracking-tight">Edit Data Balita</h3>
@@ -132,17 +136,17 @@
         <form id="editBalitaForm" onsubmit="submitEditForm(event)" class="space-y-4">
             <div>
                 <label class="block text-[13px] font-bold text-slate-800 mb-1.5">Nama Lengkap Balita <span class="text-rose-500">*</span></label>
-                <input type="text" id="editName" value="{{ $balita->name }}" required class="w-full px-4 py-2.5 bg-[#f8fafc] border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6ba299]">
+                <input type="text" id="editName" value="{{ $balita->name }}" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500">
             </div>
 
             <div>
                 <label class="block text-[13px] font-bold text-slate-800 mb-1.5">Tanggal Lahir <span class="text-rose-500">*</span></label>
-                <input type="date" id="editBirthDate" value="{{ $balita->birth_date?->format('Y-m-d') }}" max="{{ date('Y-m-d') }}" required class="w-full px-4 py-2.5 bg-[#f8fafc] border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6ba299]">
+                <input type="date" id="editBirthDate" value="{{ $balita->birth_date?->format('Y-m-d') }}" max="{{ date('Y-m-d') }}" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500">
             </div>
 
             <div>
                 <label class="block text-[13px] font-bold text-slate-800 mb-1.5">Jenis Kelamin <span class="text-rose-500">*</span></label>
-                <select id="editJenisKelamin" required class="w-full px-4 py-2.5 bg-[#f8fafc] border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6ba299]">
+                <select id="editJenisKelamin" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500">
                     <option value="L" {{ $balita->jenis_kelamin === 'L' ? 'selected' : '' }}>Laki-laki (L)</option>
                     <option value="P" {{ $balita->jenis_kelamin === 'P' ? 'selected' : '' }}>Perempuan (P)</option>
                 </select>
@@ -150,7 +154,7 @@
 
             <div>
                 <label class="block text-[13px] font-bold text-slate-800 mb-1.5">Orang Tua Terkait <span class="text-rose-500">*</span></label>
-                <select id="editOrangTuaId" required class="w-full px-4 py-2.5 bg-[#f8fafc] border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6ba299]">
+                <select id="editOrangTuaId" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500">
                     @foreach($orangTuaOptions as $ot)
                         <option value="{{ $ot->id }}" {{ $balita->orang_tua_id === $ot->id ? 'selected' : '' }}>
                             {{ $ot->name }} — NIK: {{ $ot->nik }}
@@ -161,7 +165,7 @@
 
             <div class="pt-5 mt-6 border-t border-slate-100 flex items-center justify-end gap-5">
                 <button type="button" onclick="closeEditModal()" class="text-sm font-semibold text-slate-700 hover:text-slate-900">Batal</button>
-                <button type="submit" id="editSubmitBtn" class="px-5 py-2.5 bg-[#6ba299] hover:bg-[#5a9289] text-white font-semibold text-sm rounded-xl shadow-sm">Simpan Perubahan</button>
+                <button type="submit" id="editSubmitBtn" class="px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-semibold text-sm rounded-xl shadow-sm">Simpan Perubahan</button>
             </div>
         </form>
     </div>
@@ -173,11 +177,11 @@
     const editModal = document.getElementById('modalEditBalita');
 
     function openEditModal() {
-        editModal.classList.remove('hidden');
+        editModal.classList.replace('hidden', 'flex');
     }
 
     function closeEditModal() {
-        editModal.classList.add('hidden');
+        editModal.classList.replace('flex', 'hidden');
     }
 
     async function submitEditForm(e) {
@@ -202,6 +206,14 @@
                 },
                 body: JSON.stringify(payload)
             });
+
+            if (response.status === 401) {
+
+                window.location.assign(@js(route('login')));
+
+                return;
+
+            }
 
             const data = await response.json();
 

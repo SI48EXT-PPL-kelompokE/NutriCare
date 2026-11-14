@@ -92,11 +92,8 @@ class SessionController extends Controller
             return to_route($destination[0]);
         }
 
-        if ($user->can('manage-settings') && $user->can('access-module', ['akun', 'view'])) {
-            return to_route('settings.accounts.index');
-        }
-
-        foreach (['akun' => 'accounts', 'role' => 'roles', 'hak_akses' => 'permissions'] as $module => $route) {
+        if ($user->can('manage-settings')) {
+            foreach (['akun' => 'accounts', 'role' => 'roles', 'hak_akses' => 'permissions'] as $module => $route) {
                 if ($user->can('access-module', [$module, 'view'])) {
                     return to_route("settings.{$route}.index");
                 }

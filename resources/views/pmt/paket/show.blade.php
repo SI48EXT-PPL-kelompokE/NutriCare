@@ -15,13 +15,16 @@
         </a>
 
         <div class="flex items-center gap-2">
+            @can('access-module', ['paket_pmt', 'edit'])
             <a href="{{ route('pmt.paket.edit', $paket) }}" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-bold rounded-xl border border-blue-200 transition-all">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                 </svg>
                 <span>Edit Paket</span>
             </a>
+            @endcan
             
+            @can('access-module', ['paket_pmt', 'delete'])
             <form method="POST" action="{{ route('pmt.paket.destroy', $paket) }}" onsubmit="return confirm('Apakah Anda yakin ingin menghapus paket ini?');">
                 @csrf
                 @method('DELETE')
@@ -32,6 +35,7 @@
                     <span>Hapus</span>
                 </button>
             </form>
+            @endcan
         </div>
     </div>
 
@@ -139,7 +143,7 @@
     </div>
 
     <!-- Detailed Composition Table -->
-    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+    <x-table-card>
         <div class="p-5 border-b border-slate-100 flex items-center justify-between">
             <div>
                 <h2 class="text-base font-bold text-slate-800">Komposisi Bahan Makanan</h2>
@@ -150,64 +154,64 @@
             </span>
         </div>
 
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm">
-                <thead class="bg-slate-50/80 text-slate-600 text-xs font-semibold uppercase tracking-wider border-b border-slate-200/80">
-                    <tr>
-                        <th class="py-3 px-4 w-12 text-center">No</th>
-                        <th class="py-3 px-4">Nama Bahan</th>
-                        <th class="py-3 px-4">Kategori</th>
-                        <th class="py-3 px-4 text-center">Takaran</th>
-                        <th class="py-3 px-4 text-right">Energi (Kcal)</th>
-                        <th class="py-3 px-4 text-right">Protein (g)</th>
-                        <th class="py-3 px-4 text-right">Lemak (g)</th>
-                        <th class="py-3 px-4 text-right">Karbohidrat (g)</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 text-slate-700">
-                    @forelse ($paket->komposisiPaketPmt as $index => $item)
-                        @php
-                            $barang = $item->barang;
-                            $faktor = $item->jumlah / 100;
-                            $energiItem = round(($barang->energi_kcal ?? 0) * $faktor, 2);
-                            $proteinItem = round(($barang->protein ?? 0) * $faktor, 2);
-                            $lemakItem = round(($barang->lemak ?? 0) * $faktor, 2);
-                            $karboItem = round(($barang->karbohidrat ?? 0) * $faktor, 2);
-                        @endphp
-                        <tr class="hover:bg-slate-50/70 transition-colors">
-                            <td class="py-3.5 px-4 text-center text-xs text-slate-400 font-medium">{{ $index + 1 }}</td>
-                            <td class="py-3.5 px-4 font-semibold text-slate-900">
-                                {{ $barang->nama ?? 'Bahan tidak ditemukan' }}
-                            </td>
-                            <td class="py-3.5 px-4 text-xs">
-                                <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 font-medium">
-                                    {{ $barang->kategori ?? '-' }}
-                                </span>
-                            </td>
-                            <td class="py-3.5 px-4 text-center font-bold text-slate-800">
-                                {{ $item->jumlah }} <span class="text-xs font-normal text-slate-500">{{ $item->unit_type }}</span>
-                            </td>
-                            <td class="py-3.5 px-4 text-right font-medium text-amber-700">
-                                {{ $energiItem }}
-                            </td>
-                            <td class="py-3.5 px-4 text-right font-medium text-blue-700">
-                                {{ $proteinItem }}
-                            </td>
-                            <td class="py-3.5 px-4 text-right font-medium text-rose-700">
-                                {{ $lemakItem }}
-                            </td>
-                            <td class="py-3.5 px-4 text-right font-medium text-violet-700">
-                                {{ $karboItem }}
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="8" class="py-6 px-4 text-center text-slate-400 text-sm">
-                                Belum ada komposisi bahan makanan dalam paket ini.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
+        <x-data-table>
+            <x-slot:head>
+                <tr>
+                    <th scope="col" class="py-3 px-4 w-12 text-center">No</th>
+                    <th scope="col" class="py-3 px-4">Nama Bahan</th>
+                    <th scope="col" class="py-3 px-4">Kategori</th>
+                    <th scope="col" class="py-3 px-4 text-center">Takaran</th>
+                    <th scope="col" class="py-3 px-4 text-right">Energi (Kcal)</th>
+                    <th scope="col" class="py-3 px-4 text-right">Protein (g)</th>
+                    <th scope="col" class="py-3 px-4 text-right">Lemak (g)</th>
+                    <th scope="col" class="py-3 px-4 text-right">Karbohidrat (g)</th>
+                </tr>
+            </x-slot:head>
+
+            @forelse ($paket->komposisiPaketPmt as $index => $item)
+                @php
+                    $barang = $item->barang;
+                    $faktor = $item->jumlah / 100;
+                    $energiItem = round(($barang->energi_kcal ?? 0) * $faktor, 2);
+                    $proteinItem = round(($barang->protein ?? 0) * $faktor, 2);
+                    $lemakItem = round(($barang->lemak ?? 0) * $faktor, 2);
+                    $karboItem = round(($barang->karbohidrat ?? 0) * $faktor, 2);
+                @endphp
+                <tr class="hover:bg-slate-50/70 transition-colors">
+                    <td class="py-3.5 px-4 text-center text-xs text-slate-400 font-medium">{{ $index + 1 }}</td>
+                    <td class="py-3.5 px-4 font-semibold text-slate-900">
+                        {{ $barang->nama ?? 'Bahan tidak ditemukan' }}
+                    </td>
+                    <td class="py-3.5 px-4 text-xs">
+                        <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 font-medium">
+                            {{ $barang->kategori ?? '-' }}
+                        </span>
+                    </td>
+                    <td class="py-3.5 px-4 text-center font-bold text-slate-800">
+                        {{ $item->jumlah }} <span class="text-xs font-normal text-slate-500">{{ $item->unit_type }}</span>
+                    </td>
+                    <td class="py-3.5 px-4 text-right font-medium text-amber-700">
+                        {{ $energiItem }}
+                    </td>
+                    <td class="py-3.5 px-4 text-right font-medium text-blue-700">
+                        {{ $proteinItem }}
+                    </td>
+                    <td class="py-3.5 px-4 text-right font-medium text-rose-700">
+                        {{ $lemakItem }}
+                    </td>
+                    <td class="py-3.5 px-4 text-right font-medium text-violet-700">
+                        {{ $karboItem }}
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="8" class="py-6 px-4 text-center text-slate-400 text-sm">
+                        Belum ada komposisi bahan makanan dalam paket ini.
+                    </td>
+                </tr>
+            @endforelse
+
+            <x-slot:foot>
                 <tfoot class="bg-slate-50 font-bold text-slate-900 border-t-2 border-slate-200">
                     <tr>
                         <td colspan="4" class="py-3.5 px-4 text-right uppercase text-xs tracking-wider">
@@ -227,9 +231,9 @@
                         </td>
                     </tr>
                 </tfoot>
-            </table>
-        </div>
-    </div>
+            </x-slot:foot>
+        </x-data-table>
+    </x-table-card>
 
     <!-- Metadata & Audit Log -->
     <div class="text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2 px-2">

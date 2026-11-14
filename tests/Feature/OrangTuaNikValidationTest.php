@@ -7,6 +7,7 @@ use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
@@ -14,17 +15,30 @@ class OrangTuaNikValidationTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function beforeRefreshingDatabase(): void
+    {
+        if (! isset(RefreshDatabaseState::$inMemoryConnections['sqlite'])) {
+            RefreshDatabaseState::$migrated = false;
+        }
+    }
+
+    public function createApplication()
+    {
+        $app = parent::createApplication();
+        $app['config']->set('database.default', 'sqlite');
+        $app['config']->set('database.connections.sqlite.url', null);
+        $app['config']->set('database.connections.sqlite.database', ':memory:');
+
+        return $app;
+    }
+
     protected function setUp(): void
     {
-        // Gunakan database testing SQLite in-memory yang terisolasi sepenuhnya
-        putenv('DB_CONNECTION=sqlite');
-        putenv('DB_DATABASE=:memory:');
-        $_ENV['DB_CONNECTION'] = 'sqlite';
-        $_ENV['DB_DATABASE'] = ':memory:';
-        $_SERVER['DB_CONNECTION'] = 'sqlite';
-        $_SERVER['DB_DATABASE'] = ':memory:';
-
         parent::setUp();
+
+        $this->actingAs($this->userWithPermissions('Nakes / Bidan', [
+            'orang_tua' => ['can_view', 'can_create', 'can_edit', 'can_delete'],
+        ]));
     }
 
     private function validPayload(array $overrides = []): array
@@ -321,7 +335,7 @@ class OrangTuaNikValidationTest extends TestCase
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['nik']);
 
-        $this->assertDatabaseCount('users', 0);
+        $this->assertDatabaseCount('users', 1);
         $this->assertDatabaseCount('orang_tua', 0);
     }
 
@@ -438,7 +452,6 @@ class OrangTuaNikValidationTest extends TestCase
             ->assertJsonPath('success', true);
 
         $this->assertDatabaseCount('orang_tua', 0);
-        $this->assertDatabaseCount('users', 0);
+        $this->assertDatabaseCount('users', 1);
     }
 }
-

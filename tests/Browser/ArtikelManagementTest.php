@@ -14,9 +14,10 @@ class ArtikelManagementTest extends DuskTestCase
      */
     public function test_user_can_view_article_index_and_use_search_filter(): void
     {
-        $this->browse(function (Browser $browser) {
-            $browser->visit('/edukasi/artikel')
-                ->assertSee('Artikel & Panduan Edukasi')
+        $admin = $this->activeUserForRole('Admin / Kepala Puskesmas');
+        $this->browse(function (Browser $browser) use ($admin) {
+            $browser->loginAs($admin)->visit('/edukasi/artikel')
+                ->assertSee('Edukasi & Layanan Warga')
                 ->assertPresent('#searchInput')
                 ->assertPresent('#filterKategori')
                 ->assertPresent('#filterStatus')
@@ -31,8 +32,9 @@ class ArtikelManagementTest extends DuskTestCase
      */
     public function test_user_can_open_create_form_and_interact_with_quill_editor(): void
     {
-        $this->browse(function (Browser $browser) {
-            $browser->visit('/edukasi/artikel/create')
+        $admin = $this->activeUserForRole('Admin / Kepala Puskesmas');
+        $this->browse(function (Browser $browser) use ($admin) {
+            $browser->loginAs($admin)->visit('/edukasi/artikel/create')
                 ->assertSee('Formulir Artikel Baru')
                 ->assertPresent('#judul')
                 ->assertPresent('#kategori')
@@ -63,11 +65,10 @@ class ArtikelManagementTest extends DuskTestCase
         ]);
 
         $this->browse(function (Browser $browser) use ($artikel) {
-            $browser->visit('/edukasi/artikel/baca/' . $artikel->url_slug)
+            $browser->logout()->visit('/edukasi/artikel/baca/'.$artikel->url_slug)
                 ->assertSee('Nutrisi Tepat Mencegah Stunting Balita')
                 ->assertSee('Pencegahan Stunting')
                 ->assertSee('Simulasi Dusk peramban untuk membaca materi terbit.');
         });
     }
 }
-

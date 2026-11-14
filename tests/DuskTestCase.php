@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use App\Models\User;
 use Facebook\WebDriver\Chrome\ChromeOptions;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
@@ -11,6 +12,13 @@ use PHPUnit\Framework\Attributes\BeforeClass;
 
 abstract class DuskTestCase extends BaseTestCase
 {
+    protected function activeUserForRole(string $role): User
+    {
+        return User::where('active_status', true)
+            ->whereHas('role', fn ($query) => $query->where('name_role', $role))
+            ->firstOrFail();
+    }
+
     /**
      * Prepare for Dusk test execution.
      */

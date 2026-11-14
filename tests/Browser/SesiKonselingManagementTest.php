@@ -4,7 +4,6 @@ namespace Tests\Browser;
 
 use App\Models\OrangTua;
 use App\Models\SesiKonseling;
-use App\Models\User;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
 
@@ -15,8 +14,9 @@ class SesiKonselingManagementTest extends DuskTestCase
      */
     public function test_user_can_view_konseling_index_and_use_search_and_filter(): void
     {
-        $this->browse(function (Browser $browser) {
-            $browser->visit('/konseling')
+        $user = $this->activeUserForRole('Nakes / Bidan');
+        $this->browse(function (Browser $browser) use ($user) {
+            $browser->loginAs($user)->visit('/konseling')
                 ->assertSee('Sesi Konseling Gizi Balita')
                 ->assertPresent('#searchKonselingInput')
                 ->assertPresent('#filterStatus')
@@ -34,8 +34,9 @@ class SesiKonselingManagementTest extends DuskTestCase
      */
     public function test_parent_can_open_create_counseling_form_and_interact(): void
     {
-        $this->browse(function (Browser $browser) {
-            $browser->visit('/konseling/create')
+        $user = $this->activeUserForRole('Warga / Orang Tua');
+        $this->browse(function (Browser $browser) use ($user) {
+            $browser->loginAs($user)->visit('/konseling/create')
                 ->assertSee('Formulir Pengajuan Konseling')
                 ->assertPresent('#orang_tua_id')
                 ->assertPresent('#topik')
@@ -66,9 +67,10 @@ class SesiKonselingManagementTest extends DuskTestCase
             'jadwal' => null,
         ]);
 
-        $this->browse(function (Browser $browser) use ($sesi) {
-            $browser->visit('/konseling/' . $sesi->id)
-                ->assertSee('Detail Sesi #' . $sesi->id)
+        $nakes = $this->activeUserForRole('Nakes / Bidan');
+        $this->browse(function (Browser $browser) use ($sesi, $nakes) {
+            $browser->loginAs($nakes)->visit('/konseling/'.$sesi->id)
+                ->assertSee('Detail Sesi #'.$sesi->id)
                 ->assertSee('Stimulasi Tumbuh Kembang')
                 ->assertSee('Alur Perkembangan Sesi & Notifikasi')
                 ->assertPresent('#user_id')
@@ -91,7 +93,7 @@ class SesiKonselingManagementTest extends DuskTestCase
             'pregnancy_status' => 'tidak_hamil',
         ]);
 
-        $nakes = User::first() ?? User::factory()->create();
+        $nakes = $this->activeUserForRole('Nakes / Bidan');
 
         $sesiSelesai = SesiKonseling::create([
             'orang_tua_id' => $orangTua->id,
@@ -102,8 +104,8 @@ class SesiKonselingManagementTest extends DuskTestCase
             'hasil' => 'Pola makan balita dievaluasi dan diberikan rekomendasi suplemen zat besi serta telur per hari.',
         ]);
 
-        $this->browse(function (Browser $browser) use ($sesiSelesai) {
-            $browser->visit('/konseling/' . $sesiSelesai->id)
+        $this->browse(function (Browser $browser) use ($sesiSelesai, $nakes) {
+            $browser->loginAs($nakes)->visit('/konseling/'.$sesiSelesai->id)
                 ->assertSee('Status: Selesai')
                 ->assertSee('Riwayat & Status Notifikasi (KF-49)')
                 ->assertSee('Catatan & Hasil Konseling Klinis')
@@ -111,4 +113,3 @@ class SesiKonselingManagementTest extends DuskTestCase
         });
     }
 }
-

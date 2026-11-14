@@ -1,5 +1,7 @@
 @extends('layouts.admin')
 
+@section('title', 'Data Balita & Kependudukan')
+
 @section('content')
 <div class="space-y-6">
 
@@ -15,15 +17,16 @@
     <!-- HEADER TITLE & TOMBOL TAMBAH BALITA BARU -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-            <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Data Balita & Kependudukan</h2>
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Data Balita & Kependudukan</h1>
             <p class="text-xs text-slate-500 mt-1">Kelola data balita, orang tua, dan informasi identitas.</p>
         </div>
 
         <div>
+            @can('access-module', ['balita', 'create'])
             <button
                 type="button"
                 onclick="openCreateModal()"
-                class="inline-flex items-center gap-2 px-4 py-2.5 bg-[#005953] hover:bg-[#004742] text-white rounded-xl text-xs font-semibold transition-colors shadow-sm"
+                class="inline-flex items-center gap-2 px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-semibold transition-colors shadow-sm"
             >
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <line x1="12" x2="12" y1="5" y2="19"/>
@@ -31,63 +34,22 @@
                 </svg>
                 <span>Tambah Balita Baru</span>
             </button>
+            @endcan
         </div>
     </div>
 
-    <!-- NAVIGATION TABS -->
-    <div class="flex items-center gap-8 border-b border-slate-200">
-        <!-- Tab 1: Daftar Balita (Active) -->
-        <a href="{{ route('kependudukan.balita.index') }}" class="pb-3 text-sm font-bold text-[#008f7a] border-b-2 border-[#008f7a] flex items-center gap-2">
-            <svg class="w-4 h-4 text-[#008f7a]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
-                <circle cx="12" cy="7" r="4"/>
-            </svg>
-            <span>Daftar Balita</span>
-            <span class="px-2 py-0.5 text-xs font-bold bg-[#e6f7f5] text-[#008f7a] rounded-full">
-                {{ $totalBalita }}
-            </span>
-        </a>
-
-        <!-- Tab 2: Data Orang Tua / Ibu Hamil -->
-        <a href="{{ route('kependudukan.orang-tua.index') }}" class="pb-3 text-sm font-semibold text-slate-500 hover:text-slate-800 transition-colors flex items-center gap-2">
-            <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-                <circle cx="9" cy="7" r="4"/>
-                <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-            </svg>
-            <span>Data Orang Tua / Ibu Hamil</span>
-            <span class="px-2 py-0.5 text-xs font-semibold bg-slate-100 text-slate-600 rounded-full">
-                {{ $totalOrangTua }}
-            </span>
-        </a>
-    </div>
+    @include('kependudukan._tabs')
 
     <!-- FILTER & SEARCH TOOLBAR -->
     <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <form method="GET" action="{{ route('kependudukan.balita.index') }}" class="flex flex-wrap items-center gap-3 w-full sm:w-auto flex-1">
-            <!-- Search Input -->
-            <div class="relative w-full sm:w-80">
-                <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="11" cy="11" r="8"/>
-                        <path d="m21 21-4.3-4.3"/>
-                    </svg>
-                </span>
-                <input
-                    type="text"
-                    name="search"
-                    value="{{ request('search') }}"
-                    placeholder="Cari nama balita atau NIK..."
-                    class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#008f7a] transition-all"
-                >
-            </div>
+        <x-search-form results="search-results" :action="route('kependudukan.balita.index')" class="flex flex-wrap items-center gap-3 w-full sm:w-auto flex-1">
+            <x-search-input :value="request('search')" placeholder="Cari nama balita atau NIK..." />
 
             <!-- Filter Jenis Kelamin -->
             <select
                 name="jenis_kelamin"
-                onchange="this.form.submit()"
-                class="px-3.5 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-[#008f7a]"
+                data-search-filter
+                class="px-3.5 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-teal-500"
             >
                 <option value="">Semua Jenis Kelamin</option>
                 <option value="L" {{ request('jenis_kelamin') === 'L' ? 'selected' : '' }}>Laki-laki (L)</option>
@@ -97,8 +59,8 @@
             <!-- Filter Orang Tua -->
             <select
                 name="orang_tua_id"
-                onchange="this.form.submit()"
-                class="px-3.5 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-[#008f7a] max-w-xs"
+                data-search-filter
+                class="px-3.5 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-teal-500 max-w-xs"
             >
                 <option value="all">Semua Orang Tua</option>
                 @foreach($orangTuaOptions as $ot)
@@ -107,7 +69,7 @@
                     </option>
                 @endforeach
             </select>
-        </form>
+        </x-search-form>
 
         <!-- Right Controls: Ekspor & Reset -->
         <div class="flex items-center gap-2 self-end sm:self-auto">
@@ -136,226 +98,191 @@
     </div>
 
     <!-- TABLE CONTAINER -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider bg-white">
-                        <th class="py-4 px-6">Nama Balita</th>
-                        <th class="py-4 px-6">Usia</th>
-                        <th class="py-4 px-6">Nama Orang Tua</th>
-                        <th class="py-4 px-6">NIK</th>
-                        <th class="py-4 px-6">QR Identitas</th>
-                        <th class="py-4 px-6 text-right">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 text-xs">
-                    @forelse($balitas as $balita)
-                    @php
-                        $balitaPayload = [
-                            'id' => $balita->id,
-                            'orang_tua_id' => $balita->orang_tua_id,
-                            'name' => $balita->name,
-                            'birth_date' => $balita->birth_date?->format('Y-m-d'),
-                            'jenis_kelamin' => $balita->jenis_kelamin,
-                            'qr_code' => $balita->qr_code,
-                            'orang_tua_name' => $balita->orangTua?->name,
-                            'orang_tua_nik' => $balita->orangTua?->nik,
-                        ];
-                    @endphp
-                    <tr class="hover:bg-slate-50/70 transition-colors">
-                        <!-- Nama Balita + Jenis Kelamin -->
-                        <td class="py-4 px-6 whitespace-nowrap">
-                            <span class="font-bold text-slate-900 text-sm">{{ $balita->name }}</span>
-                            <span class="text-[11px] text-slate-400 font-medium ml-1">
-                                ({{ $balita->jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan' }})
-                            </span>
-                        </td>
+    <x-table-card id="search-results" aria-live="polite">
+        <x-data-table>
+            <x-slot:head>
+                <tr>
+                    <th scope="col" class="py-4 px-6">Nama Balita</th>
+                    <th scope="col" class="py-4 px-6">Usia</th>
+                    <th scope="col" class="py-4 px-6">Nama Orang Tua</th>
+                    <th scope="col" class="py-4 px-6">NIK</th>
+                    <th scope="col" class="py-4 px-6">QR Identitas</th>
+                    <th scope="col" class="py-4 px-6 text-right">Aksi</th>
+                </tr>
+            </x-slot:head>
 
-                        <!-- Usia Balita (KF-11: Hitung Otomatis dalam Bulan) -->
-                        <td class="py-4 px-6 text-slate-700 font-medium whitespace-nowrap">
-                            {{ \App\Http\Resources\BalitaResource::formatUsia($balita->birth_date) }}
-                        </td>
+            @forelse($balitas as $balita)
+            @php
+                $balitaPayload = [
+                    'id' => $balita->id,
+                    'orang_tua_id' => $balita->orang_tua_id,
+                    'name' => $balita->name,
+                    'birth_date' => $balita->birth_date?->format('Y-m-d'),
+                    'jenis_kelamin' => $balita->jenis_kelamin,
+                    'qr_code' => $balita->qr_code,
+                    'orang_tua_name' => $balita->orangTua?->name,
+                    'orang_tua_nik' => $balita->orangTua?->nik,
+                ];
+            @endphp
+            <tr class="hover:bg-slate-50/70 transition-colors">
+                <!-- Nama Balita + Jenis Kelamin -->
+                <td class="py-4 px-6 whitespace-nowrap">
+                    <span class="font-bold text-slate-900 text-sm">{{ $balita->name }}</span>
+                    <span class="text-[11px] text-slate-400 font-medium ml-1">
+                        ({{ $balita->jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan' }})
+                    </span>
+                </td>
 
-                        <!-- Nama Orang Tua -->
-                        <td class="py-4 px-6 text-slate-700 font-medium">
-                            {{ $balita->orangTua?->name ?? '-' }}
-                        </td>
+                <!-- Usia Balita (KF-11: Hitung Otomatis dalam Bulan) -->
+                <td class="py-4 px-6 text-slate-700 font-medium whitespace-nowrap">
+                    {{ \App\Http\Resources\BalitaResource::formatUsia($balita->birth_date) }}
+                </td>
 
-                        <!-- NIK Orang Tua -->
-                        <td class="py-4 px-6 font-mono text-slate-500 text-xs tracking-tight whitespace-nowrap">
-                            {{ $balita->orangTua?->nik ?? '-' }}
-                        </td>
+                <!-- Nama Orang Tua -->
+                <td class="py-4 px-6 text-slate-700 font-medium">
+                    {{ $balita->orangTua?->name ?? '-' }}
+                </td>
 
-                        <!-- QR Identitas Button (Tampilan Visual QR pada KF-12) -->
-                        <td class="py-4 px-6 whitespace-nowrap">
+                <!-- NIK Orang Tua -->
+                <td class="py-4 px-6 font-mono text-slate-500 text-xs tracking-tight whitespace-nowrap">
+                    {{ $balita->orangTua?->nik ?? '-' }}
+                </td>
+
+                <!-- QR Identitas -->
+                <td class="py-4 px-6 whitespace-nowrap">
+                    <button
+                        type="button"
+                        disabled
+                        aria-disabled="true"
+                        title="Tampilan QR Code akan tersedia pada KF-12"
+                        class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 text-[11px] font-bold transition-colors enabled:hover:border-teal-600 enabled:hover:text-teal-700 focus-visible:outline-teal-500 disabled:opacity-75 disabled:cursor-not-allowed"
+                    >
+                        <svg aria-hidden="true" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect width="5" height="5" x="3" y="3" rx="1"/>
+                            <rect width="5" height="5" x="16" y="3" rx="1"/>
+                            <rect width="5" height="5" x="3" y="16" rx="1"/>
+                            <path d="M21 16h-3a2 2 0 0 0-2 2v3"/>
+                            <path d="M21 21v.01"/>
+                            <path d="M12 7v3a2 2 0 0 1-2 2H7"/>
+                            <path d="M3 12h.01"/>
+                            <path d="M12 3h.01"/>
+                            <path d="M12 16v.01"/>
+                            <path d="M16 12h1"/>
+                            <path d="M21 12v.01"/>
+                            <path d="M12 21v-1"/>
+                        </svg>
+                        <span>QR</span>
+                    </button>
+                </td>
+
+                <!-- Aksi: Lihat KMS & Menu Dropdown Tiga Titik -->
+                <td class="py-4 px-6 text-right whitespace-nowrap">
+                    <div class="inline-flex items-center justify-end gap-2">
+                        <button
+                            type="button"
+                            disabled
+                            aria-disabled="true"
+                            title="Integrasi KMS belum tersedia"
+                            class="text-teal-700/60 font-bold text-xs disabled:cursor-not-allowed"
+                        >
+                            Lihat KMS
+                        </button>
+
+                        <div class="relative inline-block text-left">
                             <button
                                 type="button"
-                                disabled
-                                aria-disabled="true"
-                                title="Tampilan QR Code akan tersedia pada KF-12"
-                                class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-600 text-[11px] font-bold shadow-2xs disabled:opacity-75 disabled:cursor-not-allowed"
+                                id="action-trigger-{{ $balita->id }}"
+                                onclick="toggleActionMenu(event, {{ $balita->id }})"
+                                aria-haspopup="true"
+                                aria-expanded="false"
+                                aria-controls="action-menu-{{ $balita->id }}"
+                                aria-label="Menu aksi untuk {{ $balita->name }}"
+                                class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500"
                             >
-                                <svg class="w-3.5 h-3.5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <rect width="5" height="5" x="3" y="3" rx="1"/>
-                                    <rect width="5" height="5" x="16" y="3" rx="1"/>
-                                    <rect width="5" height="5" x="3" y="16" rx="1"/>
-                                    <path d="M21 16h-3a2 2 0 0 0-2 2v3"/>
-                                    <path d="M21 21v.01"/>
-                                    <path d="M12 7v3a2 2 0 0 1-2 2H7"/>
-                                    <path d="M3 12h.01"/>
-                                    <path d="M12 3h.01"/>
-                                    <path d="M12 16v.01"/>
-                                    <path d="M16 12h1"/>
-                                    <path d="M21 12v.01"/>
-                                    <path d="M12 21v-1"/>
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="5" r="1"/>
+                                    <circle cx="12" cy="12" r="1"/>
+                                    <circle cx="12" cy="19" r="1"/>
                                 </svg>
-                                <span>QR</span>
                             </button>
-                        </td>
 
-                        <!-- Aksi: Lihat KMS & Menu Dropdown Tiga Titik -->
-                        <td class="py-4 px-6 text-right whitespace-nowrap">
-                            <div class="inline-flex items-center justify-end gap-2">
+                            <div
+                                id="action-menu-{{ $balita->id }}"
+                                role="menu"
+                                aria-labelledby="action-trigger-{{ $balita->id }}"
+                                class="action-dropdown-menu hidden fixed z-50 w-44 rounded-xl bg-white border border-slate-200 shadow-lg py-1.5 text-left"
+                            >
+                                <a
+                                    href="{{ route('kependudukan.balita.show', $balita->id) }}"
+                                    role="menuitem"
+                                    class="flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-teal-700 transition-colors"
+                                >
+                                    <svg class="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                                        <circle cx="12" cy="12" r="3"/>
+                                    </svg>
+                                    <span>Lihat Detail</span>
+                                </a>
+
+                                @can('access-module', ['balita', 'edit'])
                                 <button
                                     type="button"
-                                    disabled
-                                    aria-disabled="true"
-                                    title="Integrasi KMS belum tersedia"
-                                    class="text-[#008f7a]/60 font-bold text-xs disabled:cursor-not-allowed"
+                                    role="menuitem"
+                                    onclick='closeAllActionMenus(); openEditModal(@json($balitaPayload))'
+                                    class="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-sky-600 transition-colors text-left"
                                 >
-                                    Lihat KMS
+                                    <svg class="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 20h9"/>
+                                        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
+                                    </svg>
+                                    <span>Edit Data Balita</span>
                                 </button>
+                                @endcan
 
-                                <div class="relative inline-block text-left">
-                                    <button
-                                        type="button"
-                                        id="action-trigger-{{ $balita->id }}"
-                                        onclick="toggleActionMenu(event, {{ $balita->id }})"
-                                        aria-haspopup="true"
-                                        aria-expanded="false"
-                                        aria-controls="action-menu-{{ $balita->id }}"
-                                        aria-label="Menu aksi untuk {{ $balita->name }}"
-                                        class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[#008f7a]"
-                                    >
-                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <circle cx="12" cy="5" r="1"/>
-                                            <circle cx="12" cy="12" r="1"/>
-                                            <circle cx="12" cy="19" r="1"/>
-                                        </svg>
-                                    </button>
+                                <div class="my-1 border-t border-slate-100"></div>
 
-                                    <div
-                                        id="action-menu-{{ $balita->id }}"
-                                        role="menu"
-                                        aria-labelledby="action-trigger-{{ $balita->id }}"
-                                        class="action-dropdown-menu hidden fixed z-50 w-44 rounded-xl bg-white border border-slate-200 shadow-lg py-1.5 text-left"
-                                    >
-                                        <a
-                                            href="{{ route('kependudukan.balita.show', $balita->id) }}"
-                                            role="menuitem"
-                                            class="flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-[#008f7a] transition-colors"
-                                        >
-                                            <svg class="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
-                                                <circle cx="12" cy="12" r="3"/>
-                                            </svg>
-                                            <span>Lihat Detail</span>
-                                        </a>
-
-                                        <button
-                                            type="button"
-                                            role="menuitem"
-                                            onclick='closeAllActionMenus(); openEditModal(@json($balitaPayload))'
-                                            class="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-sky-600 transition-colors text-left"
-                                        >
-                                            <svg class="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <path d="M12 20h9"/>
-                                                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
-                                            </svg>
-                                            <span>Edit Data Balita</span>
-                                        </button>
-
-                                        <div class="my-1 border-t border-slate-100"></div>
-
-                                        <button
-                                            type="button"
-                                            role="menuitem"
-                                            onclick="closeAllActionMenus(); confirmDelete({{ $balita->id }}, '{{ addslashes($balita->name) }}')"
-                                            class="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors text-left"
-                                        >
-                                            <svg class="w-3.5 h-3.5 text-rose-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <path d="M3 6h18"/>
-                                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-                                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-                                            </svg>
-                                            <span>Hapus Data Balita</span>
-                                        </button>
-                                    </div>
-                                </div>
+                                @can('access-module', ['balita', 'delete'])
+                                <button
+                                    type="button"
+                                    role="menuitem"
+                                    onclick="closeAllActionMenus(); confirmDelete({{ $balita->id }}, '{{ addslashes($balita->name) }}')"
+                                    class="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors text-left"
+                                >
+                                    <svg class="w-3.5 h-3.5 text-rose-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M3 6h18"/>
+                                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                                    </svg>
+                                    <span>Hapus Data Balita</span>
+                                </button>
+                                @endcan
                             </div>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="6" class="py-12 text-center text-slate-400">
-                            <svg class="w-12 h-12 mx-auto text-slate-300 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                <circle cx="12" cy="12" r="10"/>
-                                <line x1="8" x2="16" y1="12" y2="12"/>
-                            </svg>
-                            <p class="font-medium text-sm text-slate-600">Tidak ada data balita ditemukan.</p>
-                            <p class="text-xs text-slate-400 mt-1">Silakan sesuaikan filter pencarian atau tambahkan data balita baru.</p>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            @empty
+            <tr>
+                <td colspan="6" class="py-12 text-center text-slate-400">
+                    <svg class="w-12 h-12 mx-auto text-slate-300 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="8" x2="16" y1="12" y2="12"/>
+                    </svg>
+                    <p class="font-medium text-sm text-slate-600">Tidak ada data balita ditemukan.</p>
+                    <p class="text-xs text-slate-400 mt-1">Silakan sesuaikan filter pencarian atau tambahkan data balita baru.</p>
+                </td>
+            </tr>
+            @endforelse
+        </x-data-table>
 
-        <!-- PAGINATION BAR -->
-        <div class="px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white">
-            <p class="text-xs text-slate-500">
-                Menampilkan
-                <span class="font-semibold text-slate-800">{{ $balitas->firstItem() ?? 0 }}–{{ $balitas->lastItem() ?? 0 }}</span>
-                dari
-                <span class="font-semibold text-slate-800">{{ $balitas->total() }}</span>
-                balita
-            </p>
-
-            @if ($balitas->hasPages())
-            <div class="flex items-center gap-1">
-                {{-- Previous Page Link --}}
-                @if ($balitas->onFirstPage())
-                    <span class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 border border-slate-100 text-xs cursor-not-allowed">&lsaquo;</span>
-                @else
-                    <a href="{{ $balitas->previousPageUrl() }}" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-600 border border-slate-200 hover:bg-slate-50 text-xs transition-colors">&lsaquo;</a>
-                @endif
-
-                {{-- Pagination Elements --}}
-                @foreach ($balitas->getUrlRange(1, $balitas->lastPage()) as $page => $url)
-                    @if ($page == $balitas->currentPage())
-                        <span class="w-8 h-8 rounded-lg flex items-center justify-center bg-[#005953] text-white font-bold text-xs shadow-sm">{{ $page }}</span>
-                    @else
-                        <a href="{{ $url }}" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-600 border border-slate-200 hover:bg-slate-50 text-xs font-semibold transition-colors">{{ $page }}</a>
-                    @endif
-                @endforeach
-
-                {{-- Next Page Link --}}
-                @if ($balitas->hasMorePages())
-                    <a href="{{ $balitas->nextPageUrl() }}" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-600 border border-slate-200 hover:bg-slate-50 text-xs transition-colors">&rsaquo;</a>
-                @else
-                    <span class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 border border-slate-100 text-xs cursor-not-allowed">&rsaquo;</span>
-                @endif
-            </div>
-            @endif
-        </div>
-    </div>
+        <x-pagination :paginator="$balitas" label="balita" />
+    </x-table-card>
 </div>
 
 <!-- ============================================================== -->
 <!-- MODAL FORM TAMBAH / EDIT DATA BALITA                           -->
 <!-- ============================================================== -->
-<div id="modalBalitaForm" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+<div id="modalBalitaForm" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/50 backdrop-blur-sm items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-[460px] w-full p-7 shadow-2xl border border-slate-100 transform transition-all relative">
 
         <!-- Modal Header -->
@@ -390,7 +317,7 @@
                     maxlength="255"
                     required
                     placeholder="e.g. Ahmad Rayhan"
-                    class="w-full px-4 py-2.5 bg-[#f8fafc] border border-slate-200 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6ba299] focus:border-transparent transition-all"
+                    class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
                 >
             </div>
 
@@ -404,7 +331,7 @@
                     id="formBirthDate"
                     max="{{ date('Y-m-d') }}"
                     required
-                    class="w-full px-4 py-2.5 bg-[#f8fafc] border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6ba299] focus:border-transparent transition-all"
+                    class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
                 >
             </div>
 
@@ -417,7 +344,7 @@
                     <select
                         id="formJenisKelamin"
                         required
-                        class="w-full appearance-none px-4 py-2.5 pr-10 bg-[#f8fafc] border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6ba299] focus:border-transparent transition-all cursor-pointer"
+                        class="w-full appearance-none px-4 py-2.5 pr-10 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all cursor-pointer"
                     >
                         <option value="" disabled selected>Pilih Jenis Kelamin...</option>
                         <option value="L">Laki-laki (L)</option>
@@ -440,7 +367,7 @@
                     <select
                         id="formOrangTuaId"
                         required
-                        class="w-full appearance-none px-4 py-2.5 pr-10 bg-[#f8fafc] border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6ba299] focus:border-transparent transition-all cursor-pointer"
+                        class="w-full appearance-none px-4 py-2.5 pr-10 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all cursor-pointer"
                     >
                         <option value="" disabled selected>Pilih Orang Tua Terdaftar...</option>
                         @foreach($orangTuaOptions as $ot)
@@ -457,7 +384,7 @@
 
             <!-- INFO BANNER QR IDENTIFIER -->
             <div class="bg-[#eff6ff] rounded-xl px-4 py-3 flex items-center gap-3 text-xs text-slate-700 font-medium">
-                <svg class="w-4 h-4 text-[#008f7a] flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <svg class="w-4 h-4 text-teal-700 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                     <rect width="5" height="5" x="3" y="3" rx="1"/>
                     <rect width="5" height="5" x="16" y="3" rx="1"/>
                     <rect width="5" height="5" x="3" y="16" rx="1"/>
@@ -478,7 +405,7 @@
                 <button
                     type="submit"
                     id="submitBtn"
-                    class="px-5 py-2.5 bg-[#6ba299] hover:bg-[#5a9289] text-white font-semibold text-sm rounded-xl shadow-sm transition-all flex items-center gap-2"
+                    class="px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-semibold text-sm rounded-xl shadow-sm transition-all flex items-center gap-2"
                 >
                     <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                         <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
@@ -579,7 +506,7 @@
         hideErrors();
         modalTitle.innerText = 'Tambah Data Balita';
         qrInfoText.innerText = 'Identifier QR unik akan dibuat secara otomatis oleh sistem.';
-        modal.classList.remove('hidden');
+        modal.classList.replace('hidden', 'flex');
     }
 
     function openEditModal(data) {
@@ -592,11 +519,11 @@
         hideErrors();
         modalTitle.innerText = 'Edit Data Balita';
         qrInfoText.innerText = `Identifier QR (${data.qr_code}) tetap dipertahankan dan tidak berubah.`;
-        modal.classList.remove('hidden');
+        modal.classList.replace('hidden', 'flex');
     }
 
     function closeModal() {
-        modal.classList.add('hidden');
+        modal.classList.replace('flex', 'hidden');
     }
 
     async function submitBalitaForm(e) {
@@ -630,6 +557,14 @@
                 },
                 body: JSON.stringify(payload)
             });
+
+            if (response.status === 401) {
+
+                window.location.assign(@js(route('login')));
+
+                return;
+
+            }
 
             const data = await response.json();
 
@@ -698,6 +633,14 @@
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     }
                 });
+
+                if (response.status === 401) {
+
+                    window.location.assign(@js(route('login')));
+
+                    return;
+
+                }
 
                 const data = await response.json();
 

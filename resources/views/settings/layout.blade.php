@@ -10,7 +10,7 @@
     <h1 class="text-2xl font-extrabold text-slate-900">Manajemen Akun & Hak Akses</h1>
 
     <nav aria-label="Manajemen akun" class="flex flex-wrap gap-x-6 border-b border-slate-200 text-sm">
-        @foreach (['accounts' => ['akun', 'Daftar Akun'], 'roles' => ['role', 'Kelola Role']] as $tab => [$module, $label])
+        @foreach (['accounts' => ['akun', 'Daftar Akun'], 'roles' => ['role', 'Kelola Role'], 'permissions' => ['hak_akses', 'Matriks Hak Akses']] as $tab => [$module, $label])
             @can('access-module', [$module, 'view'])
                 <a href="{{ route("settings.{$tab}.index") }}"
                     @if (request()->routeIs("settings.{$tab}.*")) aria-current="page" @endif

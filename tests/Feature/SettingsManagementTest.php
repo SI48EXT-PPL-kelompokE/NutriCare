@@ -72,6 +72,36 @@ class SettingsManagementTest extends TestCase
         $this->assertDatabaseMissing('permissions', ['role_id' => $role->id]);
     }
 
+    public function test_matrix_changes_apply_on_the_next_request_to_accounts_in_that_role(): void
+    {
+        $admin = $this->administrator();
+        $staff = $this->userWithPermissions('Tenaga Gizi', ['balita' => ['can_edit']]);
+        $changes = ['changes' => [['role_id' => $staff->role_id, 'module' => 'balita', 'action' => 'can_view', 'enabled' => '1']]];
+        $this->actingAs($staff)->get(route('kependudukan.balita.index'))->assertForbidden();
+        $this->actingAs($admin)->get(route('settings.permissions.index'))->assertOk()->assertSee('Matriks Hak Akses')->assertSee('Tenaga Gizi');
+        $this->put(route('settings.permissions.update'), $changes)->assertRedirect(route('settings.permissions.index'));
+        $this->assertDatabaseHas('permissions', ['role_id' => $staff->role_id, 'module_name' => 'balita', 'can_view' => true, 'can_edit' => true]);
+        $this->actingAs($staff->fresh())->get(route('kependudukan.balita.index'))->assertOk();
+
+        $changes['changes'][0]['enabled'] = '0';
+        $this->actingAs($admin)->put(route('settings.permissions.update'), $changes)->assertRedirect(route('settings.permissions.index'));
+        $this->actingAs($staff->fresh())->get(route('kependudukan.balita.index'))->assertForbidden();
+    }
+
+    public function test_settings_require_admin_and_matrix_rejects_resident_access_to_staff_records(): void
+    {
+        $this->get(route('settings.accounts.index'))->assertRedirect(route('login'));
+        $staff = $this->userWithPermissions('Tenaga Gizi', ['akun' => ['can_view'], 'hak_akses' => ['can_edit']]);
+        $this->actingAs($staff)->get(route('settings.accounts.index'))->assertForbidden();
+        $this->put(route('settings.permissions.update'))->assertForbidden();
+
+        $residentRole = Role::firstOrCreate(['name_role' => Role::RESIDENT]);
+        $this->actingAs($this->administrator())->put(route('settings.permissions.update'), ['changes' => [[
+            'role_id' => $residentRole->id, 'module' => 'balita', 'action' => 'can_view', 'enabled' => '1',
+        ]]])->assertForbidden();
+        $this->assertDatabaseMissing('permissions', ['role_id' => $residentRole->id, 'module_name' => 'balita']);
+    }
+
     private function administrator(): User
     {
         $crud = ['can_view', 'can_create', 'can_edit', 'can_delete'];

@@ -2,13 +2,13 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use App\Models\PengukuranKms;
 use App\Models\Balita;
-use App\Models\User;
+use App\Models\PengukuranKms;
 use App\Models\Role;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class PengukuranKmsCrudTest extends TestCase
 {
@@ -19,9 +19,11 @@ class PengukuranKmsCrudTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Pastikan database testing
         $this->assertDatabaseIs('nutricare_testing');
+        Role::where('name_role', 'Nakes / Bidan')->firstOrFail()->permissions()
+            ->where('module_name', 'kms')->update(['can_delete' => true]);
     }
 
     protected function assertDatabaseIs($expected)
@@ -37,7 +39,7 @@ class PengukuranKmsCrudTest extends TestCase
      */
     public function test_nakes_dapat_membuka_index()
     {
-        $roleNakes = Role::where('name', 'Nakes / Bidan')->first();
+        $roleNakes = Role::where('name_role', 'Nakes / Bidan')->first();
         $user = User::factory()->create(['role_id' => $roleNakes->id]);
 
         $response = $this->actingAs($user)->get(route('kms.index'));
@@ -52,7 +54,7 @@ class PengukuranKmsCrudTest extends TestCase
      */
     public function test_kader_dapat_membuka_index()
     {
-        $roleKader = Role::where('name', 'Kader Posyandu')->first();
+        $roleKader = Role::where('name_role', 'Kader Posyandu')->first();
         $user = User::factory()->create(['role_id' => $roleKader->id]);
 
         $response = $this->actingAs($user)->get(route('kms.index'));
@@ -65,7 +67,7 @@ class PengukuranKmsCrudTest extends TestCase
      */
     public function test_nakes_dapat_membuka_create()
     {
-        $roleNakes = Role::where('name', 'Nakes / Bidan')->first();
+        $roleNakes = Role::where('name_role', 'Nakes / Bidan')->first();
         $user = User::factory()->create(['role_id' => $roleNakes->id]);
 
         $response = $this->actingAs($user)->get(route('kms.create'));
@@ -80,9 +82,9 @@ class PengukuranKmsCrudTest extends TestCase
      */
     public function test_nakes_dapat_membuka_show()
     {
-        $roleNakes = Role::where('name', 'Nakes / Bidan')->first();
+        $roleNakes = Role::where('name_role', 'Nakes / Bidan')->first();
         $user = User::factory()->create(['role_id' => $roleNakes->id]);
-        
+
         $pengukuran = PengukuranKms::factory()->create();
 
         $response = $this->actingAs($user)->get(route('kms.show', $pengukuran));
@@ -97,7 +99,7 @@ class PengukuranKmsCrudTest extends TestCase
      */
     public function test_store_valid_menyimpan_data_dengan_petugas_otomatis()
     {
-        $roleNakes = Role::where('name', 'Nakes / Bidan')->first();
+        $roleNakes = Role::where('name_role', 'Nakes / Bidan')->first();
         $user = User::factory()->create(['role_id' => $roleNakes->id]);
         $balita = Balita::factory()->create([
             'birth_date' => Carbon::parse('2024-01-15'),
@@ -135,7 +137,7 @@ class PengukuranKmsCrudTest extends TestCase
      */
     public function test_store_menerima_desimal_berkoma()
     {
-        $roleNakes = Role::where('name', 'Nakes / Bidan')->first();
+        $roleNakes = Role::where('name_role', 'Nakes / Bidan')->first();
         $user = User::factory()->create(['role_id' => $roleNakes->id]);
         $balita = Balita::factory()->create([
             'birth_date' => Carbon::parse('2024-01-15'),
@@ -166,7 +168,7 @@ class PengukuranKmsCrudTest extends TestCase
      */
     public function test_store_gagal_jika_balita_tidak_ada()
     {
-        $roleNakes = Role::where('name', 'Nakes / Bidan')->first();
+        $roleNakes = Role::where('name_role', 'Nakes / Bidan')->first();
         $user = User::factory()->create(['role_id' => $roleNakes->id]);
 
         $data = [
@@ -186,7 +188,7 @@ class PengukuranKmsCrudTest extends TestCase
      */
     public function test_store_gagal_jika_tanggal_di_masa_depan()
     {
-        $roleNakes = Role::where('name', 'Nakes / Bidan')->first();
+        $roleNakes = Role::where('name_role', 'Nakes / Bidan')->first();
         $user = User::factory()->create(['role_id' => $roleNakes->id]);
         $balita = Balita::factory()->create();
 
@@ -207,7 +209,7 @@ class PengukuranKmsCrudTest extends TestCase
      */
     public function test_store_gagal_jika_tanggal_sebelum_tanggal_lahir()
     {
-        $roleNakes = Role::where('name', 'Nakes / Bidan')->first();
+        $roleNakes = Role::where('name_role', 'Nakes / Bidan')->first();
         $user = User::factory()->create(['role_id' => $roleNakes->id]);
         $balita = Balita::factory()->create([
             'birth_date' => Carbon::parse('2024-06-15'),
@@ -230,7 +232,7 @@ class PengukuranKmsCrudTest extends TestCase
      */
     public function test_store_gagal_jika_usia_lebih_dari_60_bulan()
     {
-        $roleNakes = Role::where('name', 'Nakes / Bidan')->first();
+        $roleNakes = Role::where('name_role', 'Nakes / Bidan')->first();
         $user = User::factory()->create(['role_id' => $roleNakes->id]);
         $balita = Balita::factory()->create([
             'birth_date' => Carbon::parse('2020-12-15'), // > 5 tahun
@@ -257,7 +259,7 @@ class PengukuranKmsCrudTest extends TestCase
      */
     public function test_store_gagal_jika_bb_di_luar_rentang()
     {
-        $roleNakes = Role::where('name', 'Nakes / Bidan')->first();
+        $roleNakes = Role::where('name_role', 'Nakes / Bidan')->first();
         $user = User::factory()->create(['role_id' => $roleNakes->id]);
         $balita = Balita::factory()->create();
 
@@ -287,7 +289,7 @@ class PengukuranKmsCrudTest extends TestCase
      */
     public function test_store_gagal_jika_tb_di_luar_rentang()
     {
-        $roleNakes = Role::where('name', 'Nakes / Bidan')->first();
+        $roleNakes = Role::where('name_role', 'Nakes / Bidan')->first();
         $user = User::factory()->create(['role_id' => $roleNakes->id]);
         $balita = Balita::factory()->create();
 
@@ -317,7 +319,7 @@ class PengukuranKmsCrudTest extends TestCase
      */
     public function test_store_gagal_jika_lila_di_luar_rentang()
     {
-        $roleNakes = Role::where('name', 'Nakes / Bidan')->first();
+        $roleNakes = Role::where('name_role', 'Nakes / Bidan')->first();
         $user = User::factory()->create(['role_id' => $roleNakes->id]);
         $balita = Balita::factory()->create();
 
@@ -338,7 +340,7 @@ class PengukuranKmsCrudTest extends TestCase
      */
     public function test_store_gagal_jika_field_wajib_kosong()
     {
-        $roleNakes = Role::where('name', 'Nakes / Bidan')->first();
+        $roleNakes = Role::where('name_role', 'Nakes / Bidan')->first();
         $user = User::factory()->create(['role_id' => $roleNakes->id]);
 
         $response = $this->actingAs($user)->post(route('kms.store'), []);
@@ -351,9 +353,9 @@ class PengukuranKmsCrudTest extends TestCase
      */
     public function test_store_gagal_jika_ada_pengukuran_ganda_pada_tanggal_sama()
     {
-        $roleNakes = Role::where('name', 'Nakes / Bidan')->first();
+        $roleNakes = Role::where('name_role', 'Nakes / Bidan')->first();
         $user = User::factory()->create(['role_id' => $roleNakes->id]);
-        $balita = Balita::factory()->create();
+        $balita = Balita::factory()->create(['birth_date' => '2025-02-15']);
 
         // Pengukuran pertama
         PengukuranKms::factory()->create([
@@ -383,12 +385,14 @@ class PengukuranKmsCrudTest extends TestCase
      */
     public function test_update_mengubah_data_tanpa_mengganti_petugas()
     {
-        $roleNakes = Role::where('name', 'Nakes / Bidan')->first();
+        $roleNakes = Role::where('name_role', 'Nakes / Bidan')->first();
         $petugasAsli = User::factory()->create(['role_id' => $roleNakes->id]);
         $petugasLain = User::factory()->create(['role_id' => $roleNakes->id]);
 
         $pengukuran = PengukuranKms::factory()->create([
             'user_id' => $petugasAsli->id,
+            'balita_id' => Balita::factory()->create(['birth_date' => '2025-02-15'])->id,
+            'date' => '2026-02-15',
             'berat_badan' => 10.0,
         ]);
 
@@ -413,10 +417,13 @@ class PengukuranKmsCrudTest extends TestCase
      */
     public function test_update_tidak_gagal_oleh_validasi_duplikat_terhadap_dirinya_sendiri()
     {
-        $roleNakes = Role::where('name', 'Nakes / Bidan')->first();
+        $roleNakes = Role::where('name_role', 'Nakes / Bidan')->first();
         $user = User::factory()->create(['role_id' => $roleNakes->id]);
 
-        $pengukuran = PengukuranKms::factory()->create();
+        $pengukuran = PengukuranKms::factory()->create([
+            'balita_id' => Balita::factory()->create(['birth_date' => '2025-02-15'])->id,
+            'date' => '2026-02-15',
+        ]);
 
         $dataUpdate = [
             'balita_id' => $pengukuran->balita_id,
@@ -436,7 +443,7 @@ class PengukuranKmsCrudTest extends TestCase
      */
     public function test_destroy_menghapus_data()
     {
-        $roleNakes = Role::where('name', 'Nakes / Bidan')->first();
+        $roleNakes = Role::where('name_role', 'Nakes / Bidan')->first();
         $user = User::factory()->create(['role_id' => $roleNakes->id]);
 
         $pengukuran = PengukuranKms::factory()->create();
@@ -456,7 +463,7 @@ class PengukuranKmsCrudTest extends TestCase
      */
     public function test_index_pencarian_nama_balita()
     {
-        $roleNakes = Role::where('name', 'Nakes / Bidan')->first();
+        $roleNakes = Role::where('name_role', 'Nakes / Bidan')->first();
         $user = User::factory()->create(['role_id' => $roleNakes->id]);
 
         $balita1 = Balita::factory()->create(['name' => 'Ahmad']);
@@ -477,7 +484,7 @@ class PengukuranKmsCrudTest extends TestCase
      */
     public function test_index_filter_tanggal()
     {
-        $roleNakes = Role::where('name', 'Nakes / Bidan')->first();
+        $roleNakes = Role::where('name_role', 'Nakes / Bidan')->first();
         $user = User::factory()->create(['role_id' => $roleNakes->id]);
 
         $pengukuran1 = PengukuranKms::factory()->create(['date' => '2026-01-15']);
@@ -489,7 +496,8 @@ class PengukuranKmsCrudTest extends TestCase
         ]));
 
         $response->assertStatus(200);
-        $response->assertSee('2026-02-15');
+        $response->assertViewHas('pengukurans', fn ($records) => $records->pluck('id')->contains($pengukuran2->id)
+            && ! $records->pluck('id')->contains($pengukuran1->id));
     }
 
     /**
@@ -497,7 +505,7 @@ class PengukuranKmsCrudTest extends TestCase
      */
     public function test_index_filter_balita_id()
     {
-        $roleNakes = Role::where('name', 'Nakes / Bidan')->first();
+        $roleNakes = Role::where('name_role', 'Nakes / Bidan')->first();
         $user = User::factory()->create(['role_id' => $roleNakes->id]);
 
         $balita1 = Balita::factory()->create();
@@ -513,42 +521,16 @@ class PengukuranKmsCrudTest extends TestCase
         $response->assertDontSee($balita2->name);
     }
 
-    /**
-     * Test: Pengguna belum login ditolak (jika middleware auth ada)
-     */
-    public function test_pengguna_belum_login_ditolak()
+    public function test_pengguna_belum_login_ditolak(): void
     {
-        $response = $this->get(route('kms.index'));
-
-        // Jika ada middleware auth, akan redirect ke login
-        // Jika belum ada, akan status 200
-        // Test ini disesuaikan setelah middleware auth (Adhani) tersedia
-        $this->assertTrue(
-            $response->status() === 302 || $response->status() === 200,
-            'Test ini akan diperketat setelah middleware auth tersedia'
-        );
+        $this->get(route('kms.index'))->assertRedirect(route('login'));
     }
 
-    /**
-     * Test: Role Warga ditolak (jika middleware role ada)
-     */
-    public function test_role_warga_ditolak()
+    public function test_role_warga_ditolak(): void
     {
-        $roleWarga = Role::where('name', 'Warga / Orang Tua')->first();
-        if (!$roleWarga) {
-            $this->markTestSkipped('Role Warga tidak ada di seeder');
-        }
-
+        $roleWarga = Role::where('name_role', 'Warga / Orang Tua')->firstOrFail();
         $user = User::factory()->create(['role_id' => $roleWarga->id]);
 
-        $response = $this->actingAs($user)->get(route('kms.index'));
-
-        // Jika middleware role ada, akan ditolak (403 atau redirect)
-        // Jika belum ada, akan status 200
-        // Test ini disesuaikan setelah middleware role (Adhani) tersedia
-        $this->assertTrue(
-            in_array($response->status(), [200, 302, 403]),
-            'Test ini akan diperketat setelah middleware role tersedia'
-        );
+        $this->actingAs($user)->get(route('kms.index'))->assertForbidden();
     }
 }

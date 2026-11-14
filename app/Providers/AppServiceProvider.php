@@ -27,5 +27,7 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::define('access-module', fn (User $user, string $module, string $action): bool => $user->active_status
             && ($user->role?->permissions->firstWhere('module_name', $module)?->{'can_'.$action} ?? false));
+
+        Gate::define('view-clinical-records', fn (User $user): bool => $user->role?->name_role !== Role::RESIDENT);
     }
 }

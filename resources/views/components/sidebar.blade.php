@@ -4,13 +4,18 @@
     $compact = $variant === 'compact';
     $items ??= [
         ['label' => 'Dashboard', 'icon' => 'dashboard'],
-        ['label' => 'Data Balita', 'icon' => 'balita', 'route' => 'kependudukan.balita.index', 'active' => ['kependudukan.*']],
-        ['label' => 'KMS Digital', 'icon' => 'kms', 'route' => 'kms.index', 'active' => ['kms.*', 'imunisasi.*']],
-        ['label' => 'Logistik PMT', 'icon' => 'package', 'route' => 'pmt.paket.index', 'active' => ['pmt.*']],
+        ['label' => 'Data Balita', 'icon' => 'balita', 'route' => 'kependudukan.balita.index', 'permission' => ['balita', 'view'], 'active' => ['kependudukan.*']],
+        ['label' => 'KMS Digital', 'icon' => 'kms', 'route' => 'kms.index', 'permission' => ['kms', 'view'], 'ability' => 'view-clinical-records', 'active' => ['kms.*', 'imunisasi.*']],
+        ['label' => 'Logistik PMT', 'icon' => 'package', 'route' => 'pmt.paket.index', 'permission' => ['paket_pmt', 'view'], 'active' => ['pmt.*']],
         ['label' => 'Jadwal & Rujukan', 'icon' => 'calendar'],
-        ['label' => 'Konseling Gizi', 'icon' => 'chat', 'route' => 'konseling.index', 'active' => ['konseling.*']],
-        ['label' => 'Artikel & Pengaduan', 'icon' => 'article', 'route' => 'edukasi.artikel.index', 'active' => ['edukasi.*']],
-        ['label' => 'Pengaturan', 'icon' => 'settings', 'route' => 'settings.accounts.index', 'permission' => ['akun', 'view'], 'ability' => 'manage-settings', 'active' => ['settings.*']],
+        ['label' => 'Konseling Gizi', 'icon' => 'chat', 'route' => 'konseling.index', 'permission' => ['konseling', 'view'], 'active' => ['konseling.*']],
+        ['label' => 'Ajukan Konseling Gizi', 'icon' => 'chat', 'route' => 'konseling.create', 'permission' => ['konseling', 'create'], 'active' => ['konseling.create']],
+        ['label' => 'Artikel & Pengaduan', 'icon' => 'article', 'route' => 'edukasi.artikel.index', 'permission' => ['artikel', 'view'], 'active' => ['edukasi.*']],
+        ...collect(['akun' => 'accounts', 'role' => 'roles', 'hak_akses' => 'permissions'])
+            ->filter(fn ($route, $module) => auth()->user()?->can('access-module', [$module, 'view']))
+            ->take(1)
+            ->map(fn ($route) => ['label' => 'Pengaturan', 'icon' => 'settings', 'route' => "settings.{$route}.index", 'ability' => 'manage-settings', 'active' => ['settings.*']])
+            ->values()->all(),
     ];
 
     $icons = [

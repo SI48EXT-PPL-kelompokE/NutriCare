@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\Artikel;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Session\TokenMismatchException;
@@ -172,5 +173,25 @@ class LoginTest extends TestCase
         $this->travel(61)->seconds();
         $this->post(route('login.store'), $payload)->assertRedirect(route('kependudukan.balita.index'));
         $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_resident_cannot_read_draft_articles_or_enter_staff_modules(): void
+    {
+        $resident = $this->userWithPermissions('Warga / Orang Tua', ['artikel' => ['can_view']]);
+        $draft = Artikel::create([
+            'user_id' => $resident->id,
+            'judul' => 'Draft '.Str::random(),
+            'kategori' => 'Gizi',
+            'status' => 'draft',
+            'konten' => 'Isi draf',
+        ]);
+        $this->actingAs($resident)->get(route('edukasi.artikel.index', ['status' => 'draft']))
+            ->assertOk()
+            ->assertDontSee($draft->judul)
+            ->assertDontSee('Tulis Artikel Baru');
+        $this->get(route('edukasi.artikel.show', $draft))->assertNotFound();
+        $this->get(route('edukasi.artikel.create'))->assertForbidden();
+        $this->get(route('kms.index'))->assertForbidden();
+        $this->getJson(route('balita.index'))->assertForbidden();
     }
 }

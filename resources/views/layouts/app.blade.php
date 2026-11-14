@@ -49,10 +49,12 @@
 
         <!-- TOP BAR (Sesuaikan dengan Mockup) -->
         <header class="bg-white border-b border-slate-200 h-20 px-6 sm:px-8 flex items-center justify-between gap-4 sticky top-0 z-20">
+            @can('access-module', ['balita', 'view'])
             <x-search-form :action="route('kependudukan.balita.index')" role="search" aria-label="Pencarian Balita dari header" class="flex min-w-0 max-w-lg flex-1 items-center gap-2">
                 <x-search-input placeholder="Cari nama balita atau NIK orang tua..." wrapper-class="min-w-0 flex-1" />
                 <button type="submit" class="hidden rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:inline-flex">Cari</button>
             </x-search-form>
+            @endcan
 
             <!-- Top Right Action Controls -->
             <div class="ml-auto flex items-center gap-4">

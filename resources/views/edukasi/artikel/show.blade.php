@@ -8,7 +8,11 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
             <nav class="flex items-center gap-2 text-xs text-slate-400 mb-1">
-                <a href="{{ route('edukasi.artikel.index') }}" class="hover:text-slate-600 transition-colors">Artikel Edukasi</a>
+                @can('access-module', ['artikel', 'view'])
+                    <a href="{{ route('edukasi.artikel.index') }}" class="hover:text-slate-600 transition-colors">Artikel Edukasi</a>
+                @else
+                    <span>Artikel Edukasi</span>
+                @endcan
                 <span>/</span>
                 <span class="text-slate-600 font-semibold">Detail Artikel</span>
             </nav>
@@ -16,6 +20,7 @@
         </div>
 
         <div class="flex items-center gap-2">
+            @can('access-module', ['artikel', 'edit'])
             <a href="{{ route('edukasi.artikel.edit', $artikel->id) }}" 
                class="inline-flex items-center gap-2 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-colors">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -23,10 +28,13 @@
                 </svg>
                 <span>Edit</span>
             </a>
+            @endcan
+            @can('access-module', ['artikel', 'view'])
             <a href="{{ route('edukasi.artikel.index') }}" 
                class="inline-flex items-center gap-2 px-3.5 py-2 bg-[#008f7a] hover:bg-[#007a68] text-white text-xs font-semibold rounded-xl transition-colors">
                 <span>Kembali ke Daftar</span>
             </a>
+            @endcan
         </div>
     </div>
 

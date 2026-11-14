@@ -10,6 +10,7 @@ use App\Models\Role;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
@@ -17,17 +18,31 @@ class BalitaCrudTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function beforeRefreshingDatabase(): void
+    {
+        if (! isset(RefreshDatabaseState::$inMemoryConnections['sqlite'])) {
+            RefreshDatabaseState::$migrated = false;
+        }
+    }
+
+    public function createApplication()
+    {
+        $app = parent::createApplication();
+        $app['config']->set('database.default', 'sqlite');
+        $app['config']->set('database.connections.sqlite.url', null);
+        $app['config']->set('database.connections.sqlite.database', ':memory:');
+
+        return $app;
+    }
+
     protected function setUp(): void
     {
-        // Gunakan database testing SQLite in-memory yang terisolasi sepenuhnya
-        putenv('DB_CONNECTION=sqlite');
-        putenv('DB_DATABASE=:memory:');
-        $_ENV['DB_CONNECTION'] = 'sqlite';
-        $_ENV['DB_DATABASE'] = ':memory:';
-        $_SERVER['DB_CONNECTION'] = 'sqlite';
-        $_SERVER['DB_DATABASE'] = ':memory:';
-
         parent::setUp();
+
+        $this->actingAs($this->userWithPermissions('Kader Posyandu', [
+            'balita' => ['can_view', 'can_create', 'can_edit', 'can_delete'],
+            'orang_tua' => ['can_view', 'can_create', 'can_edit', 'can_delete'],
+        ]));
     }
 
     private function createOrangTua(array $overrides = []): OrangTua
@@ -218,7 +233,7 @@ class BalitaCrudTest extends TestCase
             ->assertJsonPath('data.0.name', 'Ahmad Rayhan');
 
         // Filter berdasarkan orang_tua_id
-        $responseParent = $this->getJson('/api/balita?orang_tua_id=' . $orangTua2->id);
+        $responseParent = $this->getJson('/api/balita?orang_tua_id='.$orangTua2->id);
         $responseParent->assertStatus(200)
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.name', 'Nabila Putri');
@@ -528,6 +543,7 @@ class BalitaCrudTest extends TestCase
         $indexResponse = $this->get('/kependudukan/balita');
         $indexResponse->assertStatus(200)
             ->assertSee('Data Balita & Kependudukan', false)
+            ->assertSee('href="'.route('kependudukan.orang-tua.index').'"', false)
             ->assertSee('Tambah Balita Baru')
             ->assertSee('Ahmad Rayhan')
             ->assertSee('Siti Aminah')
@@ -540,6 +556,24 @@ class BalitaCrudTest extends TestCase
             ->assertSee('Ahmad Rayhan')
             ->assertSee('Siti Aminah')
             ->assertSee('Kembali');
+
+        $this->get(route('kependudukan.orang-tua.index'))
+            ->assertOk()
+            ->assertSee('href="'.route('kependudukan.balita.index').'"', false)
+            ->assertSee('Siti Aminah');
+    }
+
+    public function test_balita_viewer_without_orang_tua_permission_does_not_see_the_orang_tua_tab(): void
+    {
+        $user = $this->userWithPermissions('Admin / Kepala Puskesmas', [
+            'balita' => ['can_view'],
+        ]);
+
+        $this->actingAs($user)->get(route('kependudukan.balita.index'))
+            ->assertOk()
+            ->assertDontSee('href="'.route('kependudukan.orang-tua.index').'"', false);
+
+        $this->get(route('kependudukan.orang-tua.index'))->assertForbidden();
     }
 
     /**
