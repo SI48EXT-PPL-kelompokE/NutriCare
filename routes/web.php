@@ -97,6 +97,10 @@ Route::prefix('kependudukan')->name('kependudukan.')->middleware('auth:web')->gr
     Route::middleware("can:access-module,'balita','view'")->group(function () {
         Route::get('balita', [BalitaViewController::class, 'index'])->name('balita.index');
         Route::get('balita/{balita}', [BalitaViewController::class, 'show'])->name('balita.show');
+        Route::middleware('can:view-balita-identity')->group(function () {
+            Route::get('balita/{balita}/qr', [BalitaViewController::class, 'qr'])->name('balita.qr');
+            Route::get('balita/{balita}/kartu-identitas', [BalitaViewController::class, 'identityCard'])->name('balita.identity-card');
+        });
     });
     Route::get('orang-tua', [OrangTuaViewController::class, 'index'])
         ->middleware("can:access-module,'orang_tua','view'")->name('orang-tua.index');

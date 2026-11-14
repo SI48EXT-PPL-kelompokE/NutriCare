@@ -3,6 +3,9 @@
 @section('title', 'Data Balita & Kependudukan')
 
 @section('content')
+@php
+    $canViewIdentity = Gate::allows('view-balita-identity');
+@endphp
 <div class="space-y-6">
 
     <!-- BREADCRUMB -->
@@ -152,9 +155,18 @@
                 <td class="py-4 px-6 whitespace-nowrap">
                     <button
                         type="button"
-                        disabled
-                        aria-disabled="true"
-                        title="Tampilan QR Code akan tersedia pada KF-12"
+                        @if($canViewIdentity)
+                            data-identity-qr="{{ route('kependudukan.balita.qr', $balita) }}"
+                            data-identity-card="{{ route('kependudukan.balita.identity-card', $balita) }}"
+                            data-identity-name="{{ $balita->name }}"
+                            data-identity-code="{{ $balita->qr_code }}"
+                            aria-haspopup="dialog"
+                            aria-controls="balita-qr-dialog"
+                        @else
+                            disabled
+                            title="Akses QR memerlukan izin melihat data balita"
+                        @endif
+                        aria-label="QR Identitas {{ $balita->name }}"
                         class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 text-[11px] font-bold transition-colors enabled:hover:border-teal-600 enabled:hover:text-teal-700 focus-visible:outline-teal-500 disabled:opacity-75 disabled:cursor-not-allowed"
                     >
                         <svg aria-hidden="true" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -417,6 +429,9 @@
         </form>
     </div>
 </div>
+@if($canViewIdentity)
+    @include('kependudukan.balita._qr-dialog')
+@endif
 @endsection
 
 @push('scripts')

@@ -802,7 +802,7 @@ class BalitaCrudTest extends TestCase
         $response->assertStatus(200)
             ->assertSee('Usia')
             ->assertSee('26 Bulan')
-            ->assertSee('Tampilan QR Code akan tersedia pada KF-12')
+            ->assertSee('QR Identitas Ahmad Rayhan')
             ->assertSee('Lihat KMS')
             ->assertSee('Integrasi KMS belum tersedia')
             ->assertSee('Lihat Detail')

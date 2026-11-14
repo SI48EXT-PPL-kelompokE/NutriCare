@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Balita;
 use App\Models\OrangTua;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
+use SimpleSoftwareIO\QrCode\Generator;
 
 class BalitaViewController extends Controller
 {
@@ -65,6 +67,28 @@ class BalitaViewController extends Controller
             'balita' => $balita,
             'orangTuaOptions' => $orangTuaOptions,
         ]);
+    }
+
+    public function qr(Balita $balita): Response
+    {
+        return response($this->qrSvg($balita), 200, [
+            'Content-Type' => 'image/svg+xml',
+            'Cache-Control' => 'private, no-store',
+        ]);
+    }
+
+    public function identityCard(Request $request, Balita $balita): Response
+    {
+        return response()->view('kependudukan.balita.identity-card', [
+            'balita' => $balita,
+            'qrImage' => 'data:image/svg+xml;base64,'.base64_encode($this->qrSvg($balita)),
+            'printOnLoad' => $request->boolean('print'),
+        ])->header('Cache-Control', 'private, no-store');
+    }
+
+    private function qrSvg(Balita $balita): string
+    {
+        return (string) (new Generator)->format('svg')->size(232)->margin(4)->generate($balita->qr_code);
     }
 }
 
