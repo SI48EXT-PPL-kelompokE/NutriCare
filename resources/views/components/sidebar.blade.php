@@ -10,7 +10,7 @@
         ['label' => 'Jadwal & Rujukan', 'icon' => 'calendar'],
         ['label' => 'Konseling Gizi', 'icon' => 'chat', 'route' => 'konseling.index', 'active' => ['konseling.*']],
         ['label' => 'Artikel & Pengaduan', 'icon' => 'article', 'route' => 'edukasi.artikel.index', 'active' => ['edukasi.*']],
-        ['label' => 'Pengaturan', 'icon' => 'settings'],
+        ['label' => 'Pengaturan', 'icon' => 'settings', 'route' => 'settings.accounts.index', 'permission' => ['akun', 'view'], 'ability' => 'manage-settings', 'active' => ['settings.*']],
     ];
 
     $icons = [
@@ -41,6 +41,8 @@
             <p @class(['px-3 mb-2 font-bold uppercase tracking-wider text-slate-400', 'text-[10px]' => $compact, 'text-[11px]' => !$compact])>{{ $label }}</p>
             <ul class="space-y-1">
                 @foreach ($items as $item)
+                    @continue(isset($item['permission']) && ! auth()->user()?->can('access-module', $item['permission']))
+                    @continue(isset($item['ability']) && ! auth()->user()?->can($item['ability']))
                     @php
                         $active = request()->routeIs(...($item['active'] ?? []));
                     @endphp

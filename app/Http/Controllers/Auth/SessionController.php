@@ -68,7 +68,6 @@ class SessionController extends Controller
         $request->user()->forceFill(['last_login' => now()])->save();
         $request->session()->regenerate();
         $request->session()->put(EnsureActiveSession::LAST_ACTIVITY, now()->timestamp);
-        $request->session()->put(EnsureActiveSession::LAST_ACTIVITY, now()->timestamp);
 
         return $this->landing($request);
     }
@@ -91,6 +90,10 @@ class SessionController extends Controller
 
         if ($destination && $user->can('access-module', [$destination[1], 'view'])) {
             return to_route($destination[0]);
+        }
+
+        if ($user->can('manage-settings') && $user->can('access-module', ['akun', 'view'])) {
+            return to_route('settings.accounts.index');
         }
 
         foreach (['akun' => 'accounts', 'role' => 'roles', 'hak_akses' => 'permissions'] as $module => $route) {

@@ -7,6 +7,7 @@ use App\Http\Controllers\ImunisasiController;
 use App\Http\Controllers\OrangTuaViewController;
 use App\Http\Controllers\PaketPmtController;
 use App\Http\Controllers\SesiKonselingController;
+use App\Http\Controllers\Settings\AccountController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [SessionController::class, 'landing'])->name('home');
@@ -14,6 +15,14 @@ Route::get('login', [SessionController::class, 'create'])->name('login');
 Route::post('login', [SessionController::class, 'store'])->name('login.store');
 Route::post('logout', [SessionController::class, 'destroy'])->middleware('auth:web')->name('logout');
 
+
+Route::prefix('pengaturan')->name('settings.')->middleware(['auth:web', 'can:manage-settings'])->group(function () {
+    Route::resource('akun', AccountController::class)->names('accounts')->parameters(['akun' => 'account'])
+        ->middlewareFor(['index', 'show'], "can:access-module,'akun','view'")
+        ->middlewareFor(['create', 'store'], "can:access-module,'akun','create'")
+        ->middlewareFor(['edit', 'update'], "can:access-module,'akun','edit'")
+        ->middlewareFor('destroy', "can:access-module,'akun','delete'");
+});
 
 // Modul Edukasi & Layanan Warga - PBI 15: Artikel & Panduan Edukasi
 Route::prefix('edukasi')->name('edukasi.')->group(function () {
