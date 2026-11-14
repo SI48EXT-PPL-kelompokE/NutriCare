@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ArtikelController;
+use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\BalitaViewController;
 use App\Http\Controllers\ImunisasiController;
 use App\Http\Controllers\OrangTuaViewController;
@@ -8,10 +9,10 @@ use App\Http\Controllers\PaketPmtController;
 use App\Http\Controllers\SesiKonselingController;
 use Illuminate\Support\Facades\Route;
 
-// Landing page - default ke PMT Paket (sesuai PBI 8 yang sudah di-merge)
-Route::get('/', function () {
-    return redirect()->route('pmt.paket.index');
-});
+Route::get('/', [SessionController::class, 'landing'])->name('home');
+Route::get('login', [SessionController::class, 'create'])->name('login');
+Route::post('login', [SessionController::class, 'store'])->name('login.store');
+
 
 // Modul Edukasi & Layanan Warga - PBI 15: Artikel & Panduan Edukasi
 Route::prefix('edukasi')->name('edukasi.')->group(function () {

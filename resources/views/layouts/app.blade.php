@@ -16,7 +16,7 @@
     <x-sidebar variant="compact">
         <x-slot:brand>
             <div class="h-20 flex items-center px-6 border-b border-slate-100">
-                <a href="{{ route('pmt.paket.index') }}" class="flex items-center gap-3">
+                <a href="{{ route('home') }}" class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-xl bg-teal-600 flex items-center justify-center text-white shadow-md shadow-teal-600/20">
                         <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
@@ -87,6 +87,9 @@
                         <span class="text-[10px] text-slate-400 block font-medium">{{ auth()->user()?->role?->name_role ?? 'Portal Edukasi' }}</span>
                     </div>
                 </div>
+                @guest
+                    <a href="{{ route('login') }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-teal-800 hover:bg-teal-50">Masuk</a>
+                @endguest
             </div>
         </header>
 
