@@ -87,9 +87,14 @@
                         <span class="text-[10px] text-slate-400 block font-medium">{{ auth()->user()?->role?->name_role ?? 'Portal Edukasi' }}</span>
                     </div>
                 </div>
-                @guest
+                @auth
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="rounded-lg px-3 py-2 text-sm font-semibold text-teal-800 hover:bg-teal-50">Keluar</button>
+                    </form>
+                @else
                     <a href="{{ route('login') }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-teal-800 hover:bg-teal-50">Masuk</a>
-                @endguest
+                @endauth
             </div>
         </header>
 

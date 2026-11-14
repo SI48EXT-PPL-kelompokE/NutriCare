@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureActiveSession;
 use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Application;
@@ -7,6 +8,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Http\Request;
+use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Session\TokenMismatchException;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
@@ -19,6 +21,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->web(append: [EnsureActiveSession::class]);
+        $middleware->appendToPriorityList(StartSession::class, EnsureActiveSession::class);
         $middleware->appendToPriorityList(AuthenticatesRequests::class, ValidateCsrfToken::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {
