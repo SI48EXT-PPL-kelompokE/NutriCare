@@ -25,7 +25,7 @@ class ArtikelCrudTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('Tulis Artikel Baru');
-        $response->assertSee('Kelola materi edukasi pencegahan stunting');
+        $response->assertSee('Kelola artikel edukasi gizi');
     }
 
     /**
