@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\OrangTua;
 use App\Models\SesiKonseling;
 use App\Models\User;
 use App\Notifications\StatusKonselingNotification;
@@ -38,9 +37,9 @@ class SesiKonselingController extends Controller
     /**
      * Menampilkan formulir pengajuan sesi konseling baru.
      */
-    public function create()
+    public function create(Request $request)
     {
-        $orangTuaList = OrangTua::with('balita')->orderBy('name')->get();
+        $orangTuaList = $request->user()->orangTua()->with('balita')->get();
         $topikList = SesiKonseling::TOPIK_LIST;
 
         return view('edukasi.konseling.create', compact('orangTuaList', 'topikList'));
@@ -58,18 +57,20 @@ class SesiKonselingController extends Controller
             'keluhan' => 'nullable|string|max:1000',
         ]);
 
+        abort_unless($request->user()->orangTua?->id === (int) $validated['orang_tua_id'], 403);
+
         $sesi = SesiKonseling::create([
             'orang_tua_id' => $validated['orang_tua_id'],
             'topik' => $validated['topik'],
             'jadwal' => $validated['jadwal_harapan'] ?? null,
             'status' => 'diajukan',
             'user_id' => null,
-            'hasil' => !empty($validated['keluhan']) ? 'Keluhan awal: ' . $validated['keluhan'] : null,
+            'hasil' => ! empty($validated['keluhan']) ? 'Keluhan awal: '.$validated['keluhan'] : null,
         ]);
 
         $this->kirimNotifikasiStatus($sesi, 'diajukan');
 
-        return redirect()->route('konseling.index')
+        return redirect()->route('konseling.create')
             ->with('success', 'Pengajuan sesi konseling gizi berhasil dikirim dan menunggu penjadwalan nakes.')
             ->with('status_notifikasi', 'Notifikasi status diajukan telah terkirim ke orang tua.');
     }
@@ -80,10 +81,10 @@ class SesiKonselingController extends Controller
     public function show($id)
     {
         $sesi = SesiKonseling::with(['orangTua.balita', 'nakes'])->findOrFail($id);
-        
+
         $nakesList = User::whereHas('role', function ($q) {
             $q->where('name_role', 'like', '%Nakes%')
-              ->orWhere('name_role', 'like', '%Bidan%');
+                ->orWhere('name_role', 'like', '%Bidan%');
         })->where('active_status', true)->get();
 
         return view('edukasi.konseling.show', compact('sesi', 'nakesList'));
@@ -101,7 +102,7 @@ class SesiKonselingController extends Controller
         ]);
 
         $nakes = User::find($request->user_id);
-        if (!$nakes || !$nakes->active_status) {
+        if (! $nakes || ! $nakes->active_status) {
             return response()->json([
                 'available' => false,
                 'message' => 'Tenaga kesehatan terpilih sedang tidak aktif bertugas.',
@@ -113,13 +114,14 @@ class SesiKonselingController extends Controller
         $endWindow = $targetTime->copy()->addMinutes(59);
 
         $conflict = SesiKonseling::where('user_id', $request->user_id)
-            ->when($request->ignore_id, fn($q) => $q->where('id', '!=', $request->ignore_id))
+            ->when($request->ignore_id, fn ($q) => $q->where('id', '!=', $request->ignore_id))
             ->where('status', 'dijadwalkan')
             ->whereBetween('jadwal', [$startWindow, $endWindow])
             ->first();
 
         if ($conflict) {
             $jam = $conflict->jadwal ? $conflict->jadwal->format('H:i') : '';
+
             return response()->json([
                 'available' => false,
                 'message' => "Tenaga kesehatan {$nakes->name} telah memiliki agenda pada pukul {$jam} WIB. Nakes tidak tersedia, mohon pilih waktu lain.",
@@ -145,7 +147,7 @@ class SesiKonselingController extends Controller
         ]);
 
         $nakes = User::findOrFail($validated['user_id']);
-        if (!$nakes->active_status) {
+        if (! $nakes->active_status) {
             return back()->withInput()->withErrors([
                 'user_id' => 'Tenaga kesehatan terpilih sedang tidak aktif bertugas.',
             ]);
@@ -164,6 +166,7 @@ class SesiKonselingController extends Controller
 
         if ($conflict) {
             $jamBentrok = $conflict->jadwal ? $conflict->jadwal->format('H:i') : '';
+
             return back()->withInput()->withErrors([
                 'jadwal' => "Tenaga kesehatan {$nakes->name} telah memiliki agenda konseling pada pukul {$jamBentrok} WIB. Nakes tidak tersedia: minta pilih waktu lain.",
             ]);

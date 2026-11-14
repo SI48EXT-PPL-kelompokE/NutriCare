@@ -9,7 +9,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
             <nav class="flex items-center gap-2 text-xs text-slate-400 mb-1">
-                <a href="{{ route('konseling.index') }}" class="hover:text-slate-600 transition-colors">Sesi Konseling</a>
+                <span>Sesi Konseling</span>
                 <span>/</span>
                 <span class="text-slate-600 font-semibold">Ajukan Sesi Baru</span>
             </nav>
@@ -18,13 +18,13 @@
         </div>
 
         <div>
-            <a href="{{ route('konseling.index') }}" 
+            <a href="{{ route('home') }}"
                class="inline-flex items-center gap-2 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-colors">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="19" y1="12" x2="5" y2="12"></line>
                     <polyline points="12 19 5 12 12 5"></polyline>
                 </svg>
-                <span>Kembali ke Daftar</span>
+                <span>Kembali</span>
             </a>
         </div>
     </div>
@@ -52,7 +52,7 @@
                             @php
                                 $balitaNames = $ot->balita->pluck('name')->implode(', ');
                             @endphp
-                            <option value="{{ $ot->id }}" {{ old('orang_tua_id') == $ot->id ? 'selected' : '' }}>
+                            <option value="{{ $ot->id }}" @selected(old('orang_tua_id', $ot->id) == $ot->id)>
                                 {{ $ot->name }} (NIK: {{ $ot->nik }}) {{ $balitaNames ? '— Balita: ' . $balitaNames : '' }}
                             </option>
                         @endforeach
@@ -123,7 +123,7 @@
 
             <!-- Tombol aksi -->
             <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
-                <a href="{{ route('konseling.index') }}" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded-xl transition-colors">
+                <a href="{{ route('home') }}" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded-xl transition-colors">
                     Batal
                 </a>
                 <button type="submit" id="btnSubmitKonseling" class="px-6 py-2.5 bg-[#008f7a] hover:bg-[#007a68] text-white text-xs font-semibold rounded-xl transition-colors shadow-sm flex items-center gap-2">
