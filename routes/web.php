@@ -8,6 +8,7 @@ use App\Http\Controllers\OrangTuaViewController;
 use App\Http\Controllers\PaketPmtController;
 use App\Http\Controllers\SesiKonselingController;
 use App\Http\Controllers\Settings\AccountController;
+use App\Http\Controllers\Settings\RoleController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [SessionController::class, 'landing'])->name('home');
@@ -22,6 +23,11 @@ Route::prefix('pengaturan')->name('settings.')->middleware(['auth:web', 'can:man
         ->middlewareFor(['create', 'store'], "can:access-module,'akun','create'")
         ->middlewareFor(['edit', 'update'], "can:access-module,'akun','edit'")
         ->middlewareFor('destroy', "can:access-module,'akun','delete'");
+    Route::resource('role', RoleController::class)->names('roles')->except('show')
+        ->middlewareFor('index', "can:access-module,'role','view'")
+        ->middlewareFor(['create', 'store'], "can:access-module,'role','create'")
+        ->middlewareFor(['edit', 'update'], "can:access-module,'role','edit'")
+        ->middlewareFor('destroy', "can:access-module,'role','delete'");
 });
 
 // Modul Edukasi & Layanan Warga - PBI 15: Artikel & Panduan Edukasi

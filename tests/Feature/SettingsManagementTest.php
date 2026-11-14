@@ -50,6 +50,28 @@ class SettingsManagementTest extends TestCase
         $this->assertModelMissing($account);
     }
 
+    public function test_roles_can_be_edited_and_only_unassigned_custom_roles_can_be_deleted(): void
+    {
+        $this->actingAs($this->administrator());
+        $this->get(route('settings.roles.create'))->assertOk();
+        $this->post(route('settings.roles.store'), ['name_role' => 'Petugas Baru', 'description' => 'Deskripsi awal'])
+            ->assertRedirect(route('settings.roles.index'));
+        $role = Role::whereNameRole('Petugas Baru')->firstOrFail();
+        $this->get(route('settings.roles.edit', $role))->assertOk()->assertSee('Deskripsi awal');
+        $this->patch(route('settings.roles.update', $role), ['name_role' => 'Tenaga Gizi', 'description' => 'Deskripsi baru'])
+            ->assertRedirect(route('settings.roles.index'));
+        $this->get(route('settings.roles.index', ['search' => 'Deskripsi baru']))->assertOk()->assertSee('Tenaga Gizi');
+
+        $member = User::factory()->create(['role_id' => $role->id, 'active_status' => false]);
+        $this->delete(route('settings.roles.destroy', $role))->assertSessionHas('warning');
+        $this->assertModelExists($role);
+        $member->delete();
+        $role->permissions()->create(['name' => 'Artikel', 'module_name' => 'artikel', 'can_view' => true]);
+        $this->delete(route('settings.roles.destroy', $role))->assertSessionHas('success');
+        $this->assertModelMissing($role);
+        $this->assertDatabaseMissing('permissions', ['role_id' => $role->id]);
+    }
+
     private function administrator(): User
     {
         $crud = ['can_view', 'can_create', 'can_edit', 'can_delete'];
