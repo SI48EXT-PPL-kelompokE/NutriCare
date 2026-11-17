@@ -30,17 +30,6 @@
         </a>
     </div>
 
-    @if (session('success'))
-        <div class="p-4 rounded-xl bg-teal-50 border border-teal-200 text-teal-800 text-xs font-semibold flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <svg class="w-4 h-4 text-teal-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                <span>{{ session('success') }}</span>
-            </div>
-        </div>
-    @endif
-
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
         <!-- Kolom Kiri (2 Kolom): Detail Laporan Warga -->

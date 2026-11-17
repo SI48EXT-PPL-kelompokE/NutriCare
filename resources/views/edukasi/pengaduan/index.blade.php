@@ -53,17 +53,6 @@
         </a>
     </div>
 
-    @if (session('success'))
-        <div class="p-4 rounded-xl bg-teal-50 border border-teal-200 text-teal-800 text-xs font-semibold flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <svg class="w-4 h-4 text-teal-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                <span>{{ session('success') }}</span>
-            </div>
-        </div>
-    @endif
-
     <!-- Bilah Filter & Pencarian (Gambar 15 Mockup Proposal) -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
         <form action="{{ route('edukasi.pengaduan.index') }}" method="GET" id="filterFormPengaduan" class="flex flex-wrap items-center gap-3 flex-1">
@@ -85,31 +74,37 @@
             </div>
 
             <!-- Dropdown Semua Kategori Pengaduan -->
-            <div class="w-full sm:w-56">
+            <div class="relative w-full sm:w-56">
                 <select 
                     name="kategori" 
                     id="filterKategoriPengaduan"
-                    class="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#008f7a] transition-all shadow-2xs"
+                    class="w-full appearance-none pl-3.5 pr-9 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#008f7a] transition-all shadow-2xs"
                 >
                     <option value="">Semua Kategori Pengaduan</option>
                     @foreach ($kategoriList as $kat)
                         <option value="{{ $kat }}" {{ request('kategori') == $kat ? 'selected' : '' }}>{{ $kat }}</option>
                     @endforeach
                 </select>
+                <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-400">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </span>
             </div>
 
             <!-- Dropdown Semua Status -->
-            <div class="w-full sm:w-40">
+            <div class="relative w-full sm:w-40">
                 <select 
                     name="status" 
                     id="filterStatusPengaduan"
-                    class="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#008f7a] transition-all shadow-2xs"
+                    class="w-full appearance-none pl-3.5 pr-9 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#008f7a] transition-all shadow-2xs"
                 >
                     <option value="">Semua Status</option>
                     <option value="baru" {{ request('status') == 'baru' ? 'selected' : '' }}>Baru</option>
                     <option value="diproses" {{ request('status') == 'diproses' ? 'selected' : '' }}>Diproses</option>
                     <option value="selesai" {{ request('status') == 'selesai' ? 'selected' : '' }}>Selesai</option>
                 </select>
+                <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-400">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </span>
             </div>
 
             @if(request('q') || request('kategori') || request('status'))

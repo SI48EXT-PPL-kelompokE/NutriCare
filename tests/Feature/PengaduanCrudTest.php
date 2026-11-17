@@ -14,6 +14,16 @@ class PengaduanCrudTest extends TestCase
 {
     use DatabaseTransactions;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->actingAs($this->userWithPermissions('Admin / Kepala Puskesmas', [
+            'artikel' => ['can_view'],
+            'laporan' => ['can_create'],
+        ]));
+    }
+
     /**
      * Memastikan halaman daftar pengaduan warga memuat HTTP 200 dan elemen antarmuka mockup proposal.
      */

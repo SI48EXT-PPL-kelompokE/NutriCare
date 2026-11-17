@@ -47,11 +47,11 @@ Route::prefix('edukasi')->name('edukasi.')->group(function () {
             ->middlewareFor(['create', 'store'], "can:access-module,'artikel','create'")
             ->middlewareFor(['edit', 'update'], "can:access-module,'artikel','edit'")
             ->middlewareFor('destroy', "can:access-module,'artikel','delete'");
-    });
 
-    Route::get('pengaduan/export', [PengaduanController::class, 'export'])->name('pengaduan.export');
-    Route::patch('pengaduan/{pengaduan}/tanggapi', [PengaduanController::class, 'tanggapi'])->name('pengaduan.tanggapi');
-    Route::resource('pengaduan', PengaduanController::class);
+        Route::get('pengaduan/export', [PengaduanController::class, 'export'])->name('pengaduan.export');
+        Route::patch('pengaduan/{pengaduan}/tanggapi', [PengaduanController::class, 'tanggapi'])->name('pengaduan.tanggapi');
+        Route::resource('pengaduan', PengaduanController::class);
+    });
 });
 
 // Modul Layanan Warga - PBI 16: Konseling Gizi Balita

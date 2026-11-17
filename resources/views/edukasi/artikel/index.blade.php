@@ -57,60 +57,49 @@
         @endunless
     </div>
 
-    @if (session('success'))
-        <div class="p-4 rounded-xl bg-teal-50 border border-teal-200 text-teal-800 text-xs font-semibold flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <svg class="w-4 h-4 text-teal-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                <span>{{ session('success') }}</span>
-            </div>
-        </div>
-    @endif
-
     <!-- Bilah Filter & Pencarian (Gambar 14 Mockup Proposal) -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
         <x-search-form results="search-results" :action="route('edukasi.artikel.index')" id="filterForm" class="flex flex-wrap items-center gap-3 flex-1">
             <x-search-input name="q" id="searchInput" :value="request('q')" placeholder="Cari judul artikel..." wrapper-class="w-full min-w-0 sm:min-w-56 sm:flex-1" />
 
             <!-- Dropdown Semua Kategori -->
-            <div class="w-full sm:w-48">
+            <div class="relative w-full sm:w-48">
                 <select 
                     name="kategori" 
                     id="filterKategori"
                     data-search-filter
-                    class="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#008f7a] transition-all shadow-2xs"
+                    class="w-full appearance-none pl-3.5 pr-9 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#008f7a] transition-all shadow-2xs"
                 >
                     <option value="">Semua Kategori</option>
                     @foreach ($kategoriList as $kat)
                         <option value="{{ $kat }}" {{ request('kategori') == $kat ? 'selected' : '' }}>{{ $kat }}</option>
                     @endforeach
                 </select>
+                <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-400">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </span>
             </div>
 
             @unless($isResident)
             <!-- Dropdown Semua Status -->
-            <div class="w-full sm:w-40">
+            <div class="relative w-full sm:w-40">
                 <select 
                     name="status" 
                     id="filterStatus"
                     data-search-filter
-                    class="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#008f7a] transition-all shadow-2xs"
+                    class="w-full appearance-none pl-3.5 pr-9 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#008f7a] transition-all shadow-2xs"
                 >
                     <option value="">Semua Status</option>
                     <option value="published" {{ request('status') == 'published' ? 'selected' : '' }}>Published</option>
                     <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>Draft</option>
                 </select>
+                <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-400">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </span>
             </div>
             @endunless
 
-            <!-- Tombol Filter & Reset -->
-            <button type="submit" id="btnFilter" class="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-[#005953] hover:bg-[#004742] text-white text-xs font-semibold rounded-xl transition-colors shadow-2xs">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
-                </svg>
-                <span>Filter</span>
-            </button>
+            <!-- Tautan Reset -->
             <a href="{{ route('edukasi.artikel.index') }}" id="reset-article-search" data-search-sync
                 @if (!request()->anyFilled(['q', 'kategori', 'status'])) hidden @endif
                 class="px-2.5 py-2 text-xs text-slate-400 hover:text-slate-600 transition-colors">
