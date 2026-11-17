@@ -27,15 +27,18 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        // Ambil role acak atau default ke role pertama
+        $role = \App\Models\Role::inRandomOrder()->first() ?? \App\Models\Role::first();
+
         return [
-            'role_id' => Role::first()?->id ?? 2,
+            'role_id' => $role?->id ?? 1,
             'name' => fake()->name(),
-            'username' => fake()->unique()->userName(),
             'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
+            'username' => fake()->unique()->userName(),
+            'nip' => fake()->optional()->numerify('##########'),
+            'wilayah_tugas' => fake()->city(),
             'active_status' => true,
-            'remember_token' => Str::random(10),
         ];
     }
 
@@ -85,7 +88,7 @@ class UserFactory extends Factory
     public function unverified(): static
     {
         return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
+            'active_status' => false,
         ]);
     }
 }

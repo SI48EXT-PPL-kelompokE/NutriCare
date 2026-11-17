@@ -3,8 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\BarangPmt;
-use App\Models\DistribusiPmt;
-use App\Models\KomposisiPaketPmt;
 use App\Models\PaketPmt;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
@@ -16,6 +14,10 @@ class PaketPmtCrudTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        $this->actingAs($this->userWithPermissions('Admin / Kepala Puskesmas', [
+            'paket_pmt' => ['can_view', 'can_create', 'can_edit', 'can_delete'],
+        ]));
     }
 
     public function test_index_page_loads_successfully_and_displays_seeded_packages(): void
