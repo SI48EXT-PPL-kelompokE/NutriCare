@@ -94,12 +94,15 @@
 
                 <!-- Aksi -->
                 <div class="p-4 border-t border-slate-200 flex items-center gap-3">
+                    @can('access-module', ['kms', 'edit'])
                     <a href="{{ route('kms.edit', $kms) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                         </svg>
                         Ubah Data
                     </a>
+                    @endcan
+                    @can('access-module', ['kms', 'delete'])
                     <form action="{{ route('kms.destroy', $kms) }}" method="POST" 
                           onsubmit="return confirm('Yakin ingin menghapus data pengukuran {{ $kms->balita->name }} tanggal {{ $kms->date->format('d/m/Y') }}?')"
                           class="inline">
@@ -112,11 +115,12 @@
                             Hapus
                         </button>
                     </form>
+                    @endcan
                 </div>
             </div>
 
             <!-- Riwayat Pengukuran Balita Ini -->
-            <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <x-table-card>
                 <div class="p-4 border-b border-slate-200 flex items-center gap-3">
                     <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
@@ -124,62 +128,59 @@
                     <h2 class="text-sm font-bold text-slate-800">Riwayat Pengukuran {{ $kms->balita->name }}</h2>
                 </div>
 
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead class="bg-slate-50 border-b border-slate-200">
-                            <tr>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Tanggal</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Usia</th>
-                                <th class="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">BB (kg)</th>
-                                <th class="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">Δ BB</th>
-                                <th class="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">TB/PB (cm)</th>
-                                <th class="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">Δ TB</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100">
-                            @foreach($riwayatDenganSelisih as $item)
-                                <tr class="{{ $item['pengukuran']->id == $kms->id ? 'bg-teal-50' : 'hover:bg-slate-50' }} transition-colors">
-                                    <td class="px-4 py-3 text-sm text-slate-700">
-                                        {{ $item['pengukuran']->date->isoFormat('D MMM YYYY') }}
-                                    </td>
-                                    <td class="px-4 py-3 text-sm text-slate-700">
-                                        {{ $item['pengukuran']->usia_label }}
-                                    </td>
-                                    <td class="px-4 py-3 text-sm text-slate-800 font-semibold text-right">
-                                        {{ str_replace('.', ',', number_format($item['pengukuran']->berat_badan, 1)) }}
-                                    </td>
-                                    <td class="px-4 py-3 text-sm text-right">
-                                        @if($item['selisih_bb'] !== null)
-                                            <span class="font-medium {{ $item['selisih_bb'] >= 0 ? 'text-teal-700' : 'text-rose-700' }}">
-                                                {{ $item['selisih_bb'] >= 0 ? '+' : '' }}{{ str_replace('.', ',', number_format($item['selisih_bb'], 1)) }}
-                                            </span>
-                                        @else
-                                            <span class="text-slate-400">-</span>
-                                        @endif
-                                    </td>
-                                    <td class="px-4 py-3 text-sm text-slate-800 font-semibold text-right">
-                                        {{ str_replace('.', ',', number_format($item['pengukuran']->tinggi_badan, 1)) }}
-                                    </td>
-                                    <td class="px-4 py-3 text-sm text-right">
-                                        @if($item['selisih_tb'] !== null)
-                                            <span class="font-medium {{ $item['selisih_tb'] >= 0 ? 'text-teal-700' : 'text-rose-700' }}">
-                                                {{ $item['selisih_tb'] >= 0 ? '+' : '' }}{{ str_replace('.', ',', number_format($item['selisih_tb'], 1)) }}
-                                            </span>
-                                        @else
-                                            <span class="text-slate-400">-</span>
-                                        @endif
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
+                <x-data-table>
+                    <x-slot:head>
+                        <tr>
+                            <th scope="col" class="px-4 py-3 text-left">Tanggal</th>
+                            <th scope="col" class="px-4 py-3 text-left">Usia</th>
+                            <th scope="col" class="px-4 py-3 text-right">BB (kg)</th>
+                            <th scope="col" class="px-4 py-3 text-right">Δ BB</th>
+                            <th scope="col" class="px-4 py-3 text-right">TB/PB (cm)</th>
+                            <th scope="col" class="px-4 py-3 text-right">Δ TB</th>
+                        </tr>
+                    </x-slot:head>
+
+                    @foreach($riwayatDenganSelisih as $item)
+                        <tr class="{{ $item['pengukuran']->id == $kms->id ? 'bg-teal-50' : 'hover:bg-slate-50' }} transition-colors">
+                            <td class="px-4 py-3 text-sm text-slate-700">
+                                {{ $item['pengukuran']->date->isoFormat('D MMM YYYY') }}
+                            </td>
+                            <td class="px-4 py-3 text-sm text-slate-700">
+                                {{ $item['pengukuran']->usia_label }}
+                            </td>
+                            <td class="px-4 py-3 text-sm text-slate-800 font-semibold text-right">
+                                {{ str_replace('.', ',', number_format($item['pengukuran']->berat_badan, 1)) }}
+                            </td>
+                            <td class="px-4 py-3 text-sm text-right">
+                                @if($item['selisih_bb'] !== null)
+                                    <span class="font-medium {{ $item['selisih_bb'] >= 0 ? 'text-teal-700' : 'text-rose-700' }}">
+                                        {{ $item['selisih_bb'] >= 0 ? '+' : '' }}{{ str_replace('.', ',', number_format($item['selisih_bb'], 1)) }}
+                                    </span>
+                                @else
+                                    <span class="text-slate-400">-</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 text-sm text-slate-800 font-semibold text-right">
+                                {{ str_replace('.', ',', number_format($item['pengukuran']->tinggi_badan, 1)) }}
+                            </td>
+                            <td class="px-4 py-3 text-sm text-right">
+                                @if($item['selisih_tb'] !== null)
+                                    <span class="font-medium {{ $item['selisih_tb'] >= 0 ? 'text-teal-700' : 'text-rose-700' }}">
+                                        {{ $item['selisih_tb'] >= 0 ? '+' : '' }}{{ str_replace('.', ',', number_format($item['selisih_tb'], 1)) }}
+                                    </span>
+                                @else
+                                    <span class="text-slate-400">-</span>
+                                @endif
+                            </td>
+                        </tr>
+                    @endforeach
+                </x-data-table>
 
                 <div class="p-4 border-t border-slate-200 text-xs text-slate-500">
                     <strong>Catatan:</strong> Δ (delta) menunjukkan selisih dari pengukuran sebelumnya. 
                     Grafik pertumbuhan akan tersedia di fitur KF-16.
                 </div>
-            </div>
+            </x-table-card>
         </div>
 
         <!-- Kolom Kanan: Ringkasan Balita -->

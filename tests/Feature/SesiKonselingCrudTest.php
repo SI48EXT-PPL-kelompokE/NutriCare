@@ -14,6 +14,42 @@ class SesiKonselingCrudTest extends TestCase
 {
     use DatabaseTransactions;
 
+    private User $staff;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->staff = $this->userWithPermissions('Nakes / Bidan', [
+            'konseling' => ['can_view', 'can_edit'],
+        ]);
+        $this->actingAs($this->staff);
+    }
+
+    private function resident(?OrangTua $profile = null): User
+    {
+        $user = $this->userWithPermissions('Warga / Orang Tua', ['konseling' => ['can_create']]);
+        $profile?->update(['user_id' => $user->id]);
+
+        return $user;
+    }
+
+    public function test_resident_cannot_submit_counseling_for_another_family(): void
+    {
+        $profile = OrangTua::factory()->create();
+        $otherFamily = OrangTua::factory()->create();
+
+        $this->actingAs($this->resident($profile))->get(route('konseling.create'))
+            ->assertOk()
+            ->assertSee($profile->name)
+            ->assertDontSee($otherFamily->nik);
+
+        $this->post(route('konseling.store'), [
+            'orang_tua_id' => $otherFamily->id,
+            'topik' => 'Konseling Gizi Balita',
+        ])->assertForbidden();
+    }
+
     /**
      * SCRUM-174 [KF-47]: Memastikan halaman indeks sesi konseling memuat kode 200 dan elemen antarmuka.
      */
@@ -67,7 +103,7 @@ class SesiKonselingCrudTest extends TestCase
      */
     public function test_create_page_loads_with_parent_data_and_topics(): void
     {
-        $response = $this->get(route('konseling.create'));
+        $response = $this->actingAs($this->resident())->get(route('konseling.create'));
 
         $response->assertStatus(200);
         $response->assertSee('Formulir Pengajuan Konseling Gizi');
@@ -96,9 +132,9 @@ class SesiKonselingCrudTest extends TestCase
             'keluhan' => 'Balita sulit mengonsumsi sayur dan berat badan stuck.',
         ];
 
-        $response = $this->post(route('konseling.store'), $postData);
+        $response = $this->actingAs($this->resident($orangTua))->post(route('konseling.store'), $postData);
 
-        $response->assertRedirect(route('konseling.index'));
+        $response->assertRedirect(route('konseling.create'));
         $response->assertSessionHas('success');
 
         $sesi = SesiKonseling::where('orang_tua_id', $orangTua->id)
@@ -124,7 +160,7 @@ class SesiKonselingCrudTest extends TestCase
             'pregnancy_status' => 'tidak_hamil',
         ]);
 
-        $nakes = User::first() ?? User::factory()->create();
+        $nakes = $this->staff;
 
         $sesi = SesiKonseling::create([
             'orang_tua_id' => $orangTua->id,
@@ -164,7 +200,7 @@ class SesiKonselingCrudTest extends TestCase
             'pregnancy_status' => 'tidak_hamil',
         ]);
 
-        $nakes = User::first() ?? User::factory()->create();
+        $nakes = $this->staff;
 
         $sesi = SesiKonseling::create([
             'orang_tua_id' => $orangTua->id,
@@ -202,7 +238,7 @@ class SesiKonselingCrudTest extends TestCase
             'pregnancy_status' => 'tidak_hamil',
         ]);
 
-        $nakes = User::first() ?? User::factory()->create();
+        $nakes = $this->staff;
 
         $jadwalAwal = now()->addDays(2)->setHour(9)->setMinute(0)->setSecond(0);
 
@@ -252,7 +288,7 @@ class SesiKonselingCrudTest extends TestCase
             'pregnancy_status' => 'tidak_hamil',
         ]);
 
-        $nakes = User::first() ?? User::factory()->create();
+        $nakes = $this->staff;
         $jadwalPenuh = now()->addDays(3)->setHour(14)->setMinute(0)->setSecond(0);
 
         SesiKonseling::create([
@@ -302,15 +338,15 @@ class SesiKonselingCrudTest extends TestCase
             'pregnancy_status' => 'tidak_hamil',
         ]);
 
-        $nakes = User::first() ?? User::factory()->create();
+        $nakes = $this->staff;
 
         // 1. Uji transisi status 'diajukan' via store
-        $responseStore = $this->post(route('konseling.store'), [
+        $responseStore = $this->actingAs($this->resident($orangTua))->post(route('konseling.store'), [
             'orang_tua_id' => $orangTua->id,
             'topik' => 'MPASI dan Pola Makan Sehat',
             'keluhan' => 'Anak kurang nafsu makan sayur dan buah',
         ]);
-        $responseStore->assertRedirect(route('konseling.index'));
+        $responseStore->assertRedirect(route('konseling.create'));
 
         Notification::assertSentTo(
             $orangTua,
@@ -326,7 +362,7 @@ class SesiKonselingCrudTest extends TestCase
 
         // 2. Uji transisi status 'dijadwalkan' via jadwalkan
         $jadwal = now()->addDays(2)->setHour(10)->setMinute(0)->format('Y-m-d\TH:i');
-        $responseJadwalkan = $this->patch(route('konseling.jadwalkan', $sesi->id), [
+        $responseJadwalkan = $this->actingAs($this->staff)->patch(route('konseling.jadwalkan', $sesi->id), [
             'user_id' => $nakes->id,
             'jadwal' => $jadwal,
         ]);

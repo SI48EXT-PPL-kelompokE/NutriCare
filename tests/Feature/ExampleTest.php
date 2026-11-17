@@ -14,6 +14,6 @@ class ExampleTest extends TestCase
     {
         $response = $this->get('/');
 
-        $response->assertRedirect(route('pmt.paket.index'));
+        $response->assertRedirect(route('login'));
     }
 }
