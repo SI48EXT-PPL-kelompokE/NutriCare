@@ -14,6 +14,11 @@ class ArtikelCrudTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        $this->actingAs($this->userWithPermissions('Admin / Kepala Puskesmas', [
+            'artikel' => ['can_view', 'can_create', 'can_edit', 'can_delete'],
+            'laporan' => ['can_create'],
+        ]));
     }
 
     /**
@@ -250,6 +255,7 @@ class ArtikelCrudTest extends TestCase
             'published_at' => now(),
         ]);
 
+        auth()->forgetGuards();
         $response = $this->get(route('edukasi.artikel.baca', $artikel->url_slug));
 
         $response->assertStatus(200);
@@ -300,7 +306,6 @@ class ArtikelCrudTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
-        $this->assertStringContainsString('attachment; filename=laporan_artikel_edukasi_', (string)$response->headers->get('Content-Disposition'));
+        $this->assertStringContainsString('attachment; filename=laporan_artikel_edukasi_', (string) $response->headers->get('Content-Disposition'));
     }
 }
-

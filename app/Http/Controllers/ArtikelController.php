@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Artikel;
+use App\Models\Pengaduan;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class ArtikelController extends Controller
 {
@@ -19,7 +19,9 @@ class ArtikelController extends Controller
             'Layanan Kesehatan',
         ];
 
+        $isResident = $request->user()->role?->name_role === 'Warga / Orang Tua';
         $artikels = Artikel::with('penulis')
+            ->when($isResident, fn ($query) => $query->published())
             ->search($request->query('q'))
             ->kategori($request->query('kategori'))
             ->when($request->query('status'), function ($query, $status) {
@@ -33,10 +35,10 @@ class ArtikelController extends Controller
             ->paginate(7)
             ->withQueryString();
 
-        $totalArtikel = Artikel::count();
-        $totalPengaduan = class_exists(\App\Models\Pengaduan::class) ? \App\Models\Pengaduan::count() : 14;
+        $totalArtikel = Artikel::query()->when($isResident, fn ($query) => $query->published())->count();
+        $totalPengaduan = $isResident ? 0 : Pengaduan::count();
 
-        return view('edukasi.artikel.index', compact('artikels', 'kategoriList', 'totalArtikel', 'totalPengaduan'));
+        return view('edukasi.artikel.index', compact('artikels', 'kategoriList', 'totalArtikel', 'totalPengaduan', 'isResident'));
     }
 
     public function create()
@@ -94,9 +96,11 @@ class ArtikelController extends Controller
         return view('edukasi.artikel.show', compact('artikel'));
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
-        $artikel = Artikel::with('penulis')->findOrFail($id);
+        $artikel = Artikel::with('penulis')
+            ->when($request->user()->role?->name_role === 'Warga / Orang Tua', fn ($query) => $query->published())
+            ->findOrFail($id);
 
         return view('edukasi.artikel.show', compact('artikel'));
     }
@@ -155,7 +159,7 @@ class ArtikelController extends Controller
 
     public function export(Request $request)
     {
-        $fileName = 'laporan_artikel_edukasi_' . date('Ymd_His') . '.csv';
+        $fileName = 'laporan_artikel_edukasi_'.date('Ymd_His').'.csv';
 
         $artikels = Artikel::with('penulis')
             ->search($request->query('q'))
@@ -171,16 +175,16 @@ class ArtikelController extends Controller
             ->get();
 
         $headers = [
-            'Content-type'        => 'text/csv; charset=UTF-8',
+            'Content-type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => "attachment; filename={$fileName}",
-            'Pragma'              => 'no-cache',
-            'Cache-Control'       => 'must-revalidate, post-check=0, pre-check=0',
-            'Expires'             => '0',
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
         ];
 
         $callback = function () use ($artikels) {
             $file = fopen('php://output', 'w');
-            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
             fputcsv($file, ['ID', 'Judul Artikel', 'Kategori', 'Status', 'Penulis', 'Tanggal Publikasi', 'Dibuat Pada']);
 
             foreach ($artikels as $artikel) {
