@@ -1,93 +1,106 @@
 @extends('layouts.app')
 
-@section('title', 'Detail Jadwal Posyandu')
+@section('title', 'Detail Jadwal Posyandu - ' . $jadwal->judul)
 
 @section('content')
 <div class="max-w-4xl mx-auto space-y-6">
-    <!-- Breadcrumb & Title -->
-    <div>
-        <nav class="flex items-center gap-2 text-xs text-slate-400 font-semibold mb-2">
-            <a href="{{ route('jadwal.index') }}" class="hover:text-teal-600 transition-colors">Jadwal Posyandu</a>
-            <span>/</span>
-            <span class="text-slate-700">Detail Jadwal</span>
-        </nav>
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-                <h1 class="text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight">{{ $jadwal->judul }}</h1>
-                <p class="text-xs sm:text-sm text-slate-500 mt-1">Informasi lengkap operasional posyandu, daftar balita reservasi, dan presensi.</p>
+    <!-- Breadcrumbs -->
+    <div class="flex items-center gap-2 text-xs font-medium text-slate-400">
+        <a href="{{ route('jadwal.index') }}" class="hover:text-slate-600">Jadwal & Rujukan</a>
+        <span>/</span>
+        <a href="{{ route('jadwal.index') }}" class="hover:text-slate-600">Kalender & Agenda</a>
+        <span>/</span>
+        <span class="text-slate-700 font-semibold">{{ $jadwal->judul }}</span>
+    </div>
+
+    <!-- Header Section -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+        <div>
+            <div class="flex items-center gap-2">
+                <span class="font-bold text-xs px-2.5 py-1 rounded-lg bg-teal-50 text-teal-800 border border-teal-200">ID: #{{ $jadwal->id }}</span>
+                @if($jadwal->status === 'aktif')
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">Aktif</span>
+                @else
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-200 text-slate-700">Dibatalkan</span>
+                @endif
             </div>
-            <div class="flex items-center gap-3">
-                @can('update', $jadwal)
-                <a href="{{ route('jadwal.edit', $jadwal) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-xs transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
-                    </svg>
-                    <span>Ubah Jadwal</span>
-                </a>
-                @endcan
-            </div>
+            <h1 class="text-2xl font-extrabold text-[#0B1C30] tracking-tight mt-2">{{ $jadwal->judul }}</h1>
+            <p class="text-xs text-[#6D7A77]">Informasi operasional posyandu, alokasi penanggung jawab medis, dan daftar kehadiran pengunjung.</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+            @can('viewAny', App\Models\Presensi::class)
+            <a href="{{ route('presensi.index', ['jadwal_id' => $jadwal->id]) }}" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-teal-50 text-[#00685F] text-xs font-bold hover:bg-teal-100 border border-teal-200 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span>Buka Presensi QR</span>
+            </a>
+            @endcan
+
+            @can('update', $jadwal)
+            <a href="{{ route('jadwal.edit', $jadwal) }}" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#00685F] text-white text-xs font-bold hover:bg-[#00524B] shadow-xs transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+                <span>Ubah Jadwal</span>
+            </a>
+            @endcan
         </div>
     </div>
 
     <!-- Summary Details Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <!-- Tanggal -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Tanggal Kegiatan</span>
-            <div class="text-base font-extrabold text-slate-800">{{ $jadwal->date ? $jadwal->date->format('d F Y') : '-' }}</div>
-            <div class="text-xs text-teal-600 font-semibold mt-0.5">{{ substr($jadwal->hour, 0, 5) }} - {{ substr($jadwal->jam_selesai, 0, 5) }} WIB</div>
+        <!-- Tanggal & Waktu -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-1">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Tanggal & Waktu</span>
+            <div class="text-sm font-extrabold text-[#0B1C30]">{{ $jadwal->date ? $jadwal->date->format('d F Y') : '-' }}</div>
+            <div class="text-xs text-[#00685F] font-semibold">{{ substr($jadwal->hour, 0, 5) }} - {{ substr($jadwal->jam_selesai, 0, 5) }} WIB</div>
         </div>
 
         <!-- Lokasi -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Lokasi Pelaksanaan</span>
-            <div class="text-sm font-bold text-slate-800 truncate">{{ $jadwal->location }}</div>
-            <div class="text-xs text-slate-400 font-medium mt-0.5">Posyandu Wilayah</div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-1">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Lokasi Pelaksanaan</span>
+            <div class="text-sm font-bold text-[#0B1C30] truncate">{{ $jadwal->location }}</div>
+            <div class="text-xs text-slate-400 font-medium">Posyandu Wilayah</div>
         </div>
 
         <!-- Nakes -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Nakes Penanggung Jawab</span>
-            <div class="text-sm font-bold text-slate-800 truncate">{{ $jadwal->penanggungJawab?->name ?? 'Belum ditentukan' }}</div>
-            <div class="text-xs text-slate-400 font-medium mt-0.5">Bidan / Petugas Medis</div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-1">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Nakes Penanggung Jawab</span>
+            <div class="text-sm font-bold text-[#0B1C30] truncate">{{ $jadwal->penanggungJawab?->name ?? 'Belum ditentukan' }}</div>
+            <div class="text-xs text-slate-400 font-medium">{{ $jadwal->penanggungJawab?->nip ? 'NIP: ' . $jadwal->penanggungJawab->nip : 'Tenaga Medis' }}</div>
         </div>
 
-        <!-- Kuota & Status -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Kapasitas & Status</span>
-            <div class="flex items-center justify-between">
-                <span class="text-base font-extrabold text-slate-800">{{ $jadwal->kuota_jadwal }} <span class="text-xs font-normal text-slate-400">kuota</span></span>
-                @if($jadwal->status === 'aktif')
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Aktif</span>
-                @else
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700">Dibatalkan</span>
-                @endif
-            </div>
-            <div class="text-xs text-slate-400 font-medium mt-0.5">{{ $jadwal->reservasi->count() }} reservasi terdaftar</div>
+        <!-- Kuota & Reservasi -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-1">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Kapasitas Kuota</span>
+            <div class="text-sm font-extrabold text-[#0B1C30]">{{ $jadwal->kuota_jadwal }} <span class="text-xs font-normal text-slate-400">kuota balita</span></div>
+            <div class="text-xs text-slate-400 font-medium">{{ $jadwal->reservasi->count() }} reservasi terdaftar</div>
         </div>
     </div>
 
-    <!-- Tab Reservasi & Presensi -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-        <div class="p-6 border-b border-slate-100 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <span class="w-3 h-3 rounded-full bg-teal-600"></span>
-                <h3 class="text-sm sm:text-base font-bold text-slate-800">Balita Terdaftar & Kehadiran</h3>
+    <!-- Table Balita Terdaftar & Kehadiran -->
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-2">
+            <div>
+                <h2 class="text-base font-bold text-[#0B1C30]">Balita Terdaftar & Kehadiran</h2>
+                <p class="text-xs text-slate-500 mt-0.5">Daftar balita yang telah reservasi dan status presensi pada jadwal ini.</p>
             </div>
-            <div class="text-xs text-slate-400">
-                Total Presensi: <strong class="text-slate-700">{{ $jadwal->presensi->count() }}</strong> balita
+            <div class="text-xs text-slate-500">
+                Total Presensi: <strong class="text-slate-800">{{ $jadwal->presensi->count() }}</strong> balita
             </div>
         </div>
 
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="bg-slate-50 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-200">
-                        <th class="py-3 px-6">Nama Balita</th>
-                        <th class="py-3 px-6">Orang Tua / Wali</th>
-                        <th class="py-3 px-6">Status Reservasi</th>
-                        <th class="py-3 px-6">Batas Reschedule</th>
-                        <th class="py-3 px-6 text-center">Kehadiran (Presensi)</th>
+                    <tr class="border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                        <th class="py-3 px-3">Nama Balita</th>
+                        <th class="py-3 px-3">Orang Tua / Wali</th>
+                        <th class="py-3 px-3">Status Reservasi</th>
+                        <th class="py-3 px-3">Batas Reschedule</th>
+                        <th class="py-3 px-3 text-center">Kehadiran (Presensi)</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-xs">
@@ -95,28 +108,28 @@
                     @php
                         $presensi = $jadwal->presensi->firstWhere('balita_id', $res->balita_id);
                     @endphp
-                    <tr class="hover:bg-slate-50/80 transition-colors">
-                        <td class="py-4 px-6 font-bold text-slate-800">
+                    <tr class="hover:bg-slate-50/70 transition-colors">
+                        <td class="py-3 px-3 font-bold text-slate-800">
                             {{ $res->balita?->name ?? 'Balita #' . $res->balita_id }}
                         </td>
-                        <td class="py-4 px-6 text-slate-600">
-                            {{ $res->orangTua?->nama_ibu ?? $res->orangTua?->user?->name ?? 'Orang Tua' }}
+                        <td class="py-3 px-3 text-slate-600">
+                            {{ $res->orangTua?->name ?? $res->orangTua?->nama_ibu ?? '-' }}
                         </td>
-                        <td class="py-4 px-6">
+                        <td class="py-3 px-3">
                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700">
                                 {{ ucfirst($res->status) }}
                             </span>
                         </td>
-                        <td class="py-4 px-6 text-slate-400 text-[11px]">
+                        <td class="py-3 px-3 text-slate-400 text-[11px]">
                             {{ $res->batas_reschedule ? $res->batas_reschedule->format('d M Y H:i') : '-' }}
                         </td>
-                        <td class="py-4 px-6 text-center">
+                        <td class="py-3 px-3 text-center">
                             @if($presensi)
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                                    {{ $presensi->presence_status }}
+                                    {{ ucfirst($presensi->presence_status) }}
                                 </span>
                             @else
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
                                     Belum Hadir
                                 </span>
                             @endif
@@ -135,4 +148,3 @@
     </div>
 </div>
 @endsection
-

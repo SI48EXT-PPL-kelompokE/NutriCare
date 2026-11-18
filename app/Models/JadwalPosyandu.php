@@ -118,4 +118,21 @@ class JadwalPosyandu extends Model
     {
         return $this->hasMany(Presensi::class, 'jadwal_id');
     }
+
+    /**
+     * Hitung sisa kuota reservasi aktif.
+     */
+    public function getSisaKuotaAttribute(): int
+    {
+        $terpakai = $this->reservasi()->where('status', '!=', 'dibatalkan')->count();
+        return max(0, $this->kuota_jadwal - $terpakai);
+    }
+
+    /**
+     * Apakah kuota jadwal sudah penuh.
+     */
+    public function isFull(): bool
+    {
+        return $this->sisa_kuota <= 0;
+    }
 }
