@@ -98,6 +98,7 @@
                         <th scope="col" class="px-4 py-3 text-right">BB (kg)</th>
                         <th scope="col" class="px-4 py-3 text-right">TB/PB (cm)</th>
                         <th scope="col" class="px-4 py-3 text-right">LILA (cm)</th>
+                        <th scope="col" class="px-4 py-3 text-center">Z-score BB/U</th>
                         <th scope="col" class="px-4 py-3 text-left">Status Gizi</th>
                         <th scope="col" class="px-4 py-3 text-left">Petugas</th>
                         <th scope="col" class="px-4 py-3 text-right">Aksi</th>
@@ -118,6 +119,15 @@
                         <td class="px-4 py-3 text-sm text-slate-700 text-right">{{ str_replace('.', ',', number_format($item->tinggi_badan, 1)) }}</td>
                         <td class="px-4 py-3 text-sm text-slate-700 text-right">
                             {{ $item->lingkar_lengan_atas ? str_replace('.', ',', number_format($item->lingkar_lengan_atas, 1)) : '-' }}
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                            @if($item->z_score_bbu !== null)
+                                <span class="text-sm font-semibold text-slate-800">
+                                    {{ $item->z_score_bbu >= 0 ? '+' : '' }}{{ str_replace('.', ',', number_format($item->z_score_bbu, 2)) }}
+                                </span>
+                            @else
+                                <span class="text-sm text-slate-400">-</span>
+                            @endif
                         </td>
                         <td class="px-4 py-3">
                             <span class="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-600">

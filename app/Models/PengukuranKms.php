@@ -18,7 +18,8 @@ class PengukuranKms extends Model
         'berat_badan',
         'tinggi_badan',
         'lingkar_lengan_atas',
-        // z_score dan status_gizi diisi otomatis oleh KF-14/KF-15
+        // z_score_bbu, z_score_tbu, z_score_bbtb, status_gizi 
+        // diisi otomatis oleh KF-14/KF-15, tidak mass-assignable
     ];
 
     protected function casts(): array
