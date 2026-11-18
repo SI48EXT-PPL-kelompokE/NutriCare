@@ -119,6 +119,79 @@
                 </div>
             </div>
 
+            <!-- Kartu Z-Score -->
+            <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                <div class="p-4 border-b border-slate-200 flex items-center gap-3">
+                    <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                    </svg>
+                    <h2 class="text-sm font-bold text-slate-800">Z-Score (Standar WHO)</h2>
+                </div>
+
+                <div class="p-6 space-y-4">
+                    <!-- BB/U -->
+                    <div>
+                        <span class="text-xs text-slate-500 uppercase tracking-wide">Berat Badan menurut Umur (BB/U)</span>
+                        <div class="mt-1">
+                            @if($kms->z_score_bbu !== null)
+                                <span class="text-2xl font-bold text-slate-800">
+                                    {{ $kms->z_score_bbu >= 0 ? '+' : '' }}{{ str_replace('.', ',', number_format($kms->z_score_bbu, 2)) }}
+                                </span>
+                                <span class="text-sm text-slate-500 ml-1">SD</span>
+                            @else
+                                <div class="text-sm text-slate-500">
+                                    <span class="font-semibold text-slate-600">Belum tersedia</span>
+                                    <div class="text-xs text-slate-400 mt-1">Tabel acuan WHO belum dimuat</div>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
+                    <!-- TB/U -->
+                    <div class="pt-2 border-t border-slate-100">
+                        <span class="text-xs text-slate-500 uppercase tracking-wide">Tinggi/Panjang Badan menurut Umur (TB/U)</span>
+                        <div class="mt-1">
+                            @if($kms->z_score_tbu !== null)
+                                <span class="text-2xl font-bold text-slate-800">
+                                    {{ $kms->z_score_tbu >= 0 ? '+' : '' }}{{ str_replace('.', ',', number_format($kms->z_score_tbu, 2)) }}
+                                </span>
+                                <span class="text-sm text-slate-500 ml-1">SD</span>
+                            @else
+                                <div class="text-sm text-slate-500">
+                                    <span class="font-semibold text-slate-600">Belum tersedia</span>
+                                    <div class="text-xs text-slate-400 mt-1">Tabel acuan WHO belum dimuat</div>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
+                    <!-- BB/TB atau BB/PB -->
+                    <div class="pt-2 border-t border-slate-100">
+                        <span class="text-xs text-slate-500 uppercase tracking-wide">
+                            Berat Badan menurut {{ $kms->usia_bulan < 24 ? 'Panjang Badan (BB/PB)' : 'Tinggi Badan (BB/TB)' }}
+                        </span>
+                        <div class="mt-1">
+                            @if($kms->z_score_bbtb !== null)
+                                <span class="text-2xl font-bold text-slate-800">
+                                    {{ $kms->z_score_bbtb >= 0 ? '+' : '' }}{{ str_replace('.', ',', number_format($kms->z_score_bbtb, 2)) }}
+                                </span>
+                                <span class="text-sm text-slate-500 ml-1">SD</span>
+                            @else
+                                <div class="text-sm text-slate-500">
+                                    <span class="font-semibold text-slate-600">Belum tersedia</span>
+                                    <div class="text-xs text-slate-400 mt-1">Tabel acuan WHO belum dimuat</div>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4 border-t border-slate-200 text-xs text-slate-500">
+                    <strong>Catatan:</strong> Z-score dihitung otomatis menggunakan metode LMS WHO.
+                    Penentuan status gizi akan tersedia di fitur KF-15.
+                </div>
+            </div>
+
             <!-- Riwayat Pengukuran Balita Ini -->
             <x-table-card>
                 <div class="p-4 border-b border-slate-200 flex items-center gap-3">
