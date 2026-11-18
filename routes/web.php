@@ -6,6 +6,7 @@ use App\Http\Controllers\BalitaViewController;
 use App\Http\Controllers\ImunisasiController;
 use App\Http\Controllers\OrangTuaViewController;
 use App\Http\Controllers\PaketPmtController;
+use App\Http\Controllers\PengaduanController;
 use App\Http\Controllers\PengukuranKmsController;
 use App\Http\Controllers\SesiKonselingController;
 use App\Http\Controllers\Settings\AccountController;
@@ -35,7 +36,7 @@ Route::prefix('pengaturan')->name('settings.')->middleware(['auth:web', 'can:man
         ->middleware("can:access-module,'hak_akses','edit'")->name('permissions.update');
 });
 
-// Modul Edukasi & Layanan Warga - PBI 15: Artikel & Panduan Edukasi
+// Modul Edukasi & Layanan Warga - PBI 15 & 17
 Route::prefix('edukasi')->name('edukasi.')->group(function () {
     Route::get('artikel/baca/{slug}', [ArtikelController::class, 'baca'])->name('artikel.baca');
     Route::middleware('auth:web')->group(function () {
@@ -46,6 +47,10 @@ Route::prefix('edukasi')->name('edukasi.')->group(function () {
             ->middlewareFor(['create', 'store'], "can:access-module,'artikel','create'")
             ->middlewareFor(['edit', 'update'], "can:access-module,'artikel','edit'")
             ->middlewareFor('destroy', "can:access-module,'artikel','delete'");
+
+        Route::get('pengaduan/export', [PengaduanController::class, 'export'])->name('pengaduan.export');
+        Route::patch('pengaduan/{pengaduan}/tanggapi', [PengaduanController::class, 'tanggapi'])->name('pengaduan.tanggapi');
+        Route::resource('pengaduan', PengaduanController::class);
     });
 });
 
