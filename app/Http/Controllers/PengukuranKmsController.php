@@ -6,6 +6,7 @@ use App\Http\Requests\PengukuranKmsRequest;
 use App\Models\PengukuranKms;
 use App\Models\Balita;
 use App\Services\ZScoreService;
+use App\Services\StatusGiziService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -41,6 +42,13 @@ class PengukuranKmsController extends Controller
         }
         if ($endDate = $request->input('end_date')) {
             $query->where('date', '<=', $endDate);
+        }
+        if ($status = $request->input('status')) {
+            if ($status === '__null') {
+                $query->whereNull('status_gizi');
+            } elseif (\App\Enums\StatusGizi::tryFrom($status)) {
+                $query->status($status);
+            }
         }
 
         $pengukurans = $query->paginate(10)->withQueryString();
@@ -103,8 +111,20 @@ class PengukuranKmsController extends Controller
             $data['z_score_bbtb'] = null;
         }
 
-        // KF-15: tentukan status gizi dari z-score di sini
-        // (belum diimplementasikan, status_gizi tetap null)
+        // KF-15: tentukan status gizi dari z-score tersimpan
+        try {
+            $pengukuranSementara = new PengukuranKms($data);
+            $pengukuranSementara->z_score_bbu = $data['z_score_bbu'];
+            $pengukuranSementara->z_score_tbu = $data['z_score_tbu'];
+            $pengukuranSementara->z_score_bbtb = $data['z_score_bbtb'];
+            $data['status_gizi'] = StatusGiziService::untukPengukuran($pengukuranSementara)['status']?->value;
+        } catch (\Throwable $e) {
+            $data['status_gizi'] = null;
+            Log::warning('Gagal menentukan status gizi saat store pengukuran', [
+                'error' => $e->getMessage(),
+                'data' => $data,
+            ]);
+        }
 
         PengukuranKms::create($data);
 
@@ -192,8 +212,21 @@ class PengukuranKmsController extends Controller
             $data['z_score_bbtb'] = null;
         }
 
-        // KF-15: tentukan status gizi dari z-score di sini
-        // (belum diimplementasikan, status_gizi tetap null)
+        // KF-15: tentukan status gizi dari z-score hasil perhitungan ulang
+        try {
+            $kms->z_score_bbu = $data['z_score_bbu'];
+            $kms->z_score_tbu = $data['z_score_tbu'];
+            $kms->z_score_bbtb = $data['z_score_bbtb'];
+            $hasil = StatusGiziService::untukPengukuran($kms);
+            $data['status_gizi'] = $hasil['status']?->value;
+        } catch (\Throwable $e) {
+            $data['status_gizi'] = null;
+            Log::warning('Gagal menentukan status gizi saat update pengukuran', [
+                'error' => $e->getMessage(),
+                'pengukuran_id' => $kms->id,
+                'data' => $data,
+            ]);
+        }
 
         $kms->update($data);
 
