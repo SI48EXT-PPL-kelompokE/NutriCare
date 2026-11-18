@@ -173,6 +173,7 @@
     </x-form.group>
 
     <!-- Informasi Z-Score -->
+    <p class="text-sm font-medium text-slate-700">Status gizi ditentukan otomatis saat disimpan.</p>
     <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
         <div class="flex items-start gap-3">
             <svg class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

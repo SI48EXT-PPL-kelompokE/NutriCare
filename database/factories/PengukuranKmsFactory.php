@@ -7,6 +7,7 @@ use App\Models\Balita;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Carbon\Carbon;
+use App\Services\StatusGiziService;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\PengukuranKms>
@@ -54,8 +55,11 @@ class PengukuranKmsFactory extends Factory
 
         // Ambil petugas berrole nakes atau kader
         $petugas = User::whereHas('role', function ($q) {
-            $q->whereIn('name', ['Nakes / Bidan', 'Kader Posyandu']);
+            $q->whereIn('name_role', ['Nakes / Bidan', 'Kader Posyandu']);
         })->inRandomOrder()->first() ?? User::factory()->create();
+
+        $zBbu = fake()->randomElement([-3.5, -2.5, -1.0, 0.0, 1.5]);
+        $status = StatusGiziService::tentukan($zBbu, null, null)['status']?->value;
 
         return [
             'balita_id' => $balita->id,
@@ -64,11 +68,10 @@ class PengukuranKmsFactory extends Factory
             'berat_badan' => $beratBadan,
             'tinggi_badan' => $tinggiBadan,
             'lingkar_lengan_atas' => fake()->boolean(70) ? fake()->randomFloat(1, 10.0, 16.0) : null,
-            // z-score dan status_gizi tetap null (KF-14/KF-15)
-            'z_score_bbu' => null,
+            'z_score_bbu' => $zBbu,
             'z_score_tbu' => null,
             'z_score_bbtb' => null,
-            'status_gizi' => null,
+            'status_gizi' => $status,
         ];
     }
 }
