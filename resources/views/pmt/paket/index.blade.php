@@ -62,19 +62,8 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         
         <!-- Filter Form Controls -->
-        <form method="GET" action="{{ route('pmt.paket.index') }}" class="flex flex-wrap items-center gap-3 flex-1">
-            
-            <!-- Search Input -->
-            <div class="relative flex-1 min-w-[240px] max-w-md">
-                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                </div>
-                <input type="text" name="search" value="{{ request('search') }}" 
-                       placeholder="Cari nama paket atau bahan utama..." 
-                       class="w-full pl-10 pr-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#0f766e] transition-all">
-            </div>
+        <x-search-form results="search-results" :action="route('pmt.paket.index')" class="flex flex-wrap items-center gap-3 flex-1">
+            <x-search-input :value="request('search')" placeholder="Cari nama atau deskripsi paket..." wrapper-class="w-full min-w-0 sm:min-w-56 sm:flex-1" />
 
             <!-- Sasaran Usia Dropdown -->
             <div class="w-48">
@@ -95,189 +84,170 @@
                 </select>
             </div>
 
-            @if(request()->hasAny(['search', 'status', 'age_target']))
-                <a href="{{ route('pmt.paket.index') }}" class="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-semibold" title="Reset filter">
-                    Reset
-                </a>
-            @endif
+            <button type="submit" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl transition-all">
+                Filter
+            </button>
 
-        </form>
+            <a href="{{ route('pmt.paket.index') }}" id="reset-pmt-search" data-search-sync
+                @if (!request()->anyFilled(['search', 'age_target']) && !in_array(request('status'), ['0', '1'], true)) hidden @endif
+                class="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-semibold" title="Reset filter">
+                Reset
+            </a>
 
-        <!-- Right Counter Text (Sesuai Figma: ● Total 4 Formula Paket Aktif) -->
-        <div class="flex items-center gap-2 text-xs font-bold text-slate-700 shrink-0">
-            <span class="w-2 h-2 rounded-full bg-[#0f766e] inline-block"></span>
-            <span>Total {{ $stats['active'] ?? $pakets->total() }} Formula Paket Aktif</span>
+        </x-search-form>
+
+        <!-- Right Action Button (Sesuai Tombol Mockup) -->
+        <div class="flex items-center gap-3 shrink-0">
+            @can('access-module', ['paket_pmt', 'create'])
+            <a href="{{ route('pmt.paket.create') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all hover:shadow-md">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                <span>Tambah Paket Baru</span>
+            </a>
+            @endcan
         </div>
 
     </div>
 
-    <!-- Main Data Table Container (Sesuai Layout Presisi Figma Gambar 3) -->
-    <div class="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
+    <!-- Main Data Table Container (Sesuai Layout Mockup) -->
+    <x-table-card id="search-results" aria-live="polite">
         
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse text-xs">
-                <thead class="bg-slate-50/80 text-slate-500 uppercase font-bold tracking-wider border-b border-slate-200/80">
-                    <tr>
-                        <th class="py-3.5 px-6 font-bold">NAMA PAKET & KODE</th>
-                        <th class="py-3.5 px-4 text-center font-bold">SASARAN USIA</th>
-                        <th class="py-3.5 px-4 font-bold">TOTAL ENERGI</th>
-                        <th class="py-3.5 px-4 font-bold">TOTAL PROTEIN</th>
-                        <th class="py-3.5 px-4 font-bold">KOMPOSISI UTAMA</th>
-                        <th class="py-3.5 px-4 text-center font-bold">STATUS FORMULA</th>
-                        <th class="py-3.5 px-6 text-center font-bold">AKSI</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 text-slate-700">
-                    @forelse ($pakets as $index => $paket)
-                        @php
-                            // Format kode PKT-00X
-                            $kodePaket = 'PKT-' . str_pad($paket->id, 3, '0', STR_PAD_LEFT);
-                            $isSpecial = ($paket->id % 4 === 0) || str_contains(strtolower($paket->nama_paket_pmt), 'khusus') || str_contains(strtolower($paket->nama_paket_pmt), 'f-100');
-                            
-                            // Subtitle estimasi AKG Harian
-                            $energiVal = (float) $paket->total_energi_kcal;
-                            if ($energiVal >= 900) {
-                                $akgSubtitle = 'Densitas Tinggi 1 kkal/ml';
-                            } elseif ($energiVal >= 700) {
-                                $akgSubtitle = '± 60% AKG Harian';
-                            } elseif ($energiVal >= 500) {
-                                $akgSubtitle = '± 55% AKG Harian';
-                            } else {
-                                $akgSubtitle = '± 45% AKG Harian';
-                            }
-
-                            // Subtitle kualitas protein
-                            $proteinVal = (float) $paket->total_protein;
-                            if ($proteinVal >= 25) {
-                                $proteinSubtitle = 'Whey murni + BCAA';
-                            } elseif ($proteinVal >= 20) {
-                                $proteinSubtitle = 'Telur & isolat kedelai';
-                            } elseif ($proteinVal >= 15) {
-                                $proteinSubtitle = 'Protein hewani & nabati';
-                            } else {
-                                $proteinSubtitle = 'Tinggi kasein/whey';
-                            }
-                        @endphp
-                        <tr class="hover:bg-slate-50/60 transition-colors">
-                            
-                            <!-- 1. NAMA PAKET & KODE (Figma: Judul tebal + badge kode di samping + deskripsi di bawah) -->
-                            <td class="py-4 px-6 align-top">
-                                <div class="space-y-1">
-                                    <div class="flex items-center gap-2">
-                                        <a href="{{ route('pmt.paket.show', $paket) }}" class="font-extrabold text-slate-900 hover:text-[#0f766e] transition-colors text-sm">
-                                            {{ $paket->nama_paket_pmt }}
-                                        </a>
-                                        <span class="text-[10px] font-bold px-1.5 py-0.5 rounded {{ $isSpecial ? 'bg-[#fee2e2] text-[#b91c1c] border border-[#fecaca]' : 'bg-[#e0f2fe] text-[#0369a1] border border-[#bae6fd]' }}">
-                                            {{ $kodePaket }}
-                                        </span>
-                                    </div>
-                                    <p class="text-[11px] text-slate-400 line-clamp-2 max-w-xs leading-relaxed">
-                                        {{ $paket->deskripsi ?: 'Formula makanan pemulihan padat gizi balita.' }}
-                                    </p>
-                                </div>
-                            </td>
-
-                            <!-- 2. SASARAN USIA (Figma: Pill badge biru muda lembut) -->
-                            <td class="py-4 px-4 text-center align-top">
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-[#e0f2fe] text-[#0369a1] border border-[#bae6fd]">
-                                    {{ $paket->min_age_target }}–{{ $paket->max_age_target }} Bulan
-                                </span>
-                            </td>
-
-                            <!-- 3. TOTAL ENERGI (Figma: 400 kkal / ± 45% AKG Harian) -->
-                            <td class="py-4 px-4 align-top">
-                                <div>
-                                    <span class="text-sm font-extrabold text-slate-900 block">
-                                        {{ number_format($paket->total_energi_kcal, 0, ',', '.') }} kkal
-                                    </span>
-                                    <span class="text-[11px] text-slate-400 block mt-0.5">
-                                        {{ $akgSubtitle }}
-                                    </span>
-                                </div>
-                            </td>
-
-                            <!-- 4. TOTAL PROTEIN (Figma: 12 g / Tinggi kasein/whey) -->
-                            <td class="py-4 px-4 align-top">
-                                <div>
-                                    <span class="text-sm font-extrabold text-slate-900 block">
-                                        {{ round($paket->total_protein) }} g
-                                    </span>
-                                    <span class="text-[11px] text-slate-400 block mt-0.5">
-                                        {{ $proteinSubtitle }}
-                                    </span>
-                                </div>
-                            </td>
-
-                            <!-- 5. KOMPOSISI UTAMA (Figma: Stack of gray rounded pills) -->
-                            <td class="py-4 px-4 align-top">
-                                <div class="flex flex-col gap-1 items-start">
-                                    @forelse ($paket->komposisiPaketPmt->take(4) as $komp)
-                                        <span class="inline-block px-2.5 py-0.5 rounded bg-slate-100 border border-slate-200/70 text-[11px] font-medium text-slate-700">
-                                            {{ $komp->barang->nama ?? 'Bahan PMT' }}
-                                        </span>
-                                    @empty
-                                        <span class="text-slate-400 text-[11px] italic">Belum ada bahan</span>
-                                    @endforelse
-
-                                    @if ($paket->komposisiPaketPmt->count() > 4)
-                                        <span class="text-[10px] text-slate-400 font-semibold pl-1">
-                                            +{{ $paket->komposisiPaketPmt->count() - 4 }} bahan lainnya
-                                        </span>
-                                    @endif
-                                </div>
-                            </td>
-
-                            <!-- 6. STATUS FORMULA (Figma: ● Aktif / ● Nonaktif) -->
-                            <td class="py-4 px-4 text-center align-top">
-                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold {{ $paket->status ? 'bg-[#ecfdf5] text-[#059669] border border-[#a7f3d0]' : 'bg-slate-100 text-slate-500 border border-slate-200' }}">
-                                    <span class="w-1.5 h-1.5 rounded-full {{ $paket->status ? 'bg-[#10b981]' : 'bg-slate-400' }}"></span>
-                                    {{ $paket->status ? 'Aktif' : 'Nonaktif' }}
-                                </span>
-                            </td>
-
-                            <!-- 7. AKSI (Figma: Edit | Hapus) -->
-                            <td class="py-4 px-6 text-center align-top whitespace-nowrap">
-                                <div class="inline-flex items-center gap-2 text-xs font-semibold">
-                                    <button type="button" 
-                                            onclick='openEditModal(@json($paket))'
-                                            class="text-slate-600 hover:text-[#0f766e] transition-colors">
-                                        Edit
-                                    </button>
-                                    <span class="text-slate-300">|</span>
-                                    <form method="POST" action="{{ route('pmt.paket.destroy', $paket) }}" onsubmit="return confirm('Apakah Anda yakin ingin menghapus paket \'{{ $paket->nama_paket_pmt }}\'?');" class="inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="text-rose-600 hover:text-rose-800 transition-colors">
-                                            Hapus
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="py-12 text-center text-slate-400">
-                                <p class="text-sm font-semibold">Tidak ada paket formula yang sesuai dengan filter.</p>
-                                <p class="text-xs text-slate-400 mt-1">Silakan reset filter atau buat paket PMT baru.</p>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Table Footer Pagination Bar (Sesuai Figma) -->
-        <div class="px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-xs text-slate-500">
-            <div>
-                Menampilkan <strong class="text-slate-700">1–{{ $pakets->count() }}</strong> dari <strong class="text-slate-700">{{ $pakets->total() }}</strong> master paket aktif
+        <!-- Table Header Bar -->
+        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/>
+                </svg>
+                <h2 class="text-sm font-bold text-slate-800">Daftar Master Paket PMT</h2>
             </div>
-            <div>
-                {{ $pakets->links() }}
+            <div class="flex items-center gap-2 text-[11px] font-medium text-slate-400">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+                <span>Terakhir diperbarui: {{ date('d M Y, H:i') }} WIB</span>
             </div>
         </div>
 
-    </div>
+        <!-- Table Data -->
+        <x-data-table>
+            <x-slot:head>
+                <tr>
+                    <th scope="col" class="py-3 px-6">NAMA PAKET PMT</th>
+                    <th scope="col" class="py-3 px-4 text-center">SASARAN USIA</th>
+                    <th scope="col" class="py-3 px-4 text-center">TOTAL NUTRISI (KF-25)</th>
+                    <th scope="col" class="py-3 px-4">KOMPOSISI BAHAN</th>
+                    <th scope="col" class="py-3 px-4 text-center">STATUS</th>
+                    <th scope="col" class="py-3 px-6 text-right">AKSI</th>
+                </tr>
+            </x-slot:head>
+
+            @forelse ($pakets as $paket)
+                <tr class="hover:bg-slate-50/70 transition-colors">
+
+                    <!-- Nama Paket & Info -->
+                    <td class="py-4 px-6">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
+                                    PKT-{{ str_pad($paket->id, 3, '0', STR_PAD_LEFT) }}
+                                </span>
+                                <span class="text-[10px] text-slate-400 uppercase font-semibold">
+                                    {{ $paket->unit_type }}
+                                </span>
+                            </div>
+                            <a href="{{ route('pmt.paket.show', $paket) }}" class="font-bold text-slate-900 hover:text-teal-700 transition-colors block text-sm">
+                                {{ $paket->nama_paket_pmt }}
+                            </a>
+                            <p class="text-[11px] text-slate-400 line-clamp-1 max-w-xs">
+                                {{ $paket->deskripsi ?: 'Tidak ada keterangan khusus.' }}
+                            </p>
+                        </div>
+                    </td>
+
+                    <!-- Sasaran Usia (KF-26) -->
+                    <td class="py-4 px-4 text-center">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-teal-50 text-teal-800 border border-teal-200">
+                            {{ $paket->min_age_target }} - {{ $paket->max_age_target }} Bln
+                        </span>
+                    </td>
+
+                    <!-- Total Nutrisi (KF-25) -->
+                    <td class="py-4 px-4 text-center">
+                        <div class="space-y-1">
+                            <span class="text-sm font-extrabold text-amber-600 block">
+                                {{ $paket->total_energi_kcal }} <span class="text-[10px] font-normal text-slate-500">Kcal</span>
+                            </span>
+                            <span class="text-[10px] text-slate-500 block">
+                                P: <strong>{{ $paket->total_protein }}g</strong> &bull; L: <strong>{{ $paket->total_lemak }}g</strong> &bull; K: <strong>{{ $paket->total_karbohidrat }}g</strong>
+                            </span>
+                        </div>
+                    </td>
+
+                    <!-- Komposisi Bahan -->
+                    <td class="py-4 px-4">
+                        <div class="space-y-1">
+                            <span class="font-bold text-slate-800 block">
+                                {{ $paket->komposisiPaketPmt->count() }} Bahan Penyusun
+                            </span>
+                            <span class="text-[10px] text-slate-400 block line-clamp-1 max-w-[200px]">
+                                {{ $paket->komposisiPaketPmt->map(fn($k) => $k->barang->nama ?? '')->filter()->join(', ') }}
+                            </span>
+                        </div>
+                    </td>
+
+                    <!-- Status Pill (Sesuai Mockup) -->
+                    <td class="py-4 px-4 text-center">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold {{ $paket->status ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-500 border border-slate-200' }}">
+                            <span class="w-1.5 h-1.5 rounded-full {{ $paket->status ? 'bg-emerald-500' : 'bg-slate-400' }}"></span>
+                            {{ $paket->status ? 'Aktif' : 'Nonaktif' }}
+                        </span>
+                    </td>
+
+                    <!-- Aksi (Sesuai Mockup) -->
+                    <td class="py-4 px-6 text-right">
+                        <div class="inline-flex items-center gap-2">
+                            <!-- Tombol Detail / Edit -->
+                            <a href="{{ route('pmt.paket.show', $paket) }}"
+                               class="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs transition-colors" title="Lihat Rincian">
+                                Detail
+                            </a>
+
+                            @can('access-module', ['paket_pmt', 'edit'])
+                            <a href="{{ route('pmt.paket.edit', $paket) }}"
+                               class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit Paket">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                            </a>
+                            @endcan
+
+                            <!-- Delete / Deactivate -->
+                            @can('access-module', ['paket_pmt', 'delete'])
+                            <form method="POST" action="{{ route('pmt.paket.destroy', $paket) }}" onsubmit="return confirm('Apakah Anda yakin ingin menghapus paket \'{{ $paket->nama_paket_pmt }}\'?');" class="inline">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors" title="Hapus Paket">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            </form>
+                            @endcan
+                        </div>
+                    </td>
+
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="6" class="py-10 text-center text-slate-400">
+                        Tidak ada paket PMT yang sesuai dengan kriteria filter.
+                    </td>
+                </tr>
+            @endforelse
+        </x-data-table>
+
+        <x-pagination :paginator="$pakets" label="paket PMT" />
+
+    </x-table-card>
 
 </div>
 

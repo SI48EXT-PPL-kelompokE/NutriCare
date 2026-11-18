@@ -4,8 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Balita;
 use App\Models\Imunisasi;
-use App\Models\Role;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -14,23 +12,21 @@ class ImunisasiCrudTest extends TestCase
     use RefreshDatabase;
 
     protected $nakes;
+
     protected $kader;
-    protected $warga;
+
     protected $balita;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        // Buat roles
-        $roleNakes = Role::create(['name_role' => 'Nakes / Bidan']);
-        $roleKader = Role::create(['name_role' => 'Kader Posyandu']);
-        $roleWarga = Role::create(['name_role' => 'Warga / Orang Tua']);
-
-        // Buat users
-        $this->nakes = User::factory()->create(['role_id' => $roleNakes->id]);
-        $this->kader = User::factory()->create(['role_id' => $roleKader->id]);
-        $this->warga = User::factory()->create(['role_id' => $roleWarga->id]);
+        $this->nakes = $this->userWithPermissions('Nakes / Bidan', [
+            'imunisasi' => ['can_view', 'can_create', 'can_edit', 'can_delete'],
+        ]);
+        $this->kader = $this->userWithPermissions('Kader Posyandu', [
+            'imunisasi' => ['can_view', 'can_create'],
+        ]);
 
         // Buat balita
         $this->balita = Balita::factory()->create();
@@ -186,7 +182,8 @@ class ImunisasiCrudTest extends TestCase
             'no_batch' => 'NEW-BATCH',
         ];
 
-        $response = $this->actingAs($this->kader)->put(route('imunisasi.update', $imunisasi), $data);
+        $this->actingAs($this->kader)->put(route('imunisasi.update', $imunisasi), $data)->assertForbidden();
+        $response = $this->actingAs($this->nakes)->put(route('imunisasi.update', $imunisasi), $data);
 
         $response->assertRedirect(route('imunisasi.index'));
 
@@ -236,11 +233,11 @@ class ImunisasiCrudTest extends TestCase
             'jenis_vaksin' => 'Polio 1',
         ]);
 
-        $response = $this->actingAs($this->nakes)->get(route('imunisasi.index', ['jenis_vaksin' => 'BCG']));
+        $response = $this->actingAs($this->nakes)->get(route('imunisasi.index', ['jenis_vaksin' => 'BCG', 'balita_id' => $this->balita->id]));
 
         $response->assertOk();
         $response->assertSee('BCG');
-        $response->assertDontSee('Polio 1');
+        $response->assertViewHas('imunisasi', fn ($records) => $records->pluck('jenis_vaksin')->all() === ['BCG']);
     }
 
     /** @test */
@@ -283,7 +280,7 @@ class ImunisasiCrudTest extends TestCase
     public function pengguna_tanpa_login_ditolak()
     {
         $response = $this->get(route('imunisasi.index'));
-        
+
         // Jika autentikasi belum tersedia, test ini akan gagal
         // Sesuaikan dengan implementasi autentikasi Adhani
         $response->assertStatus(302);

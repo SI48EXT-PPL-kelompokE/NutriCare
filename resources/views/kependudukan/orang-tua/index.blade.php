@@ -1,5 +1,7 @@
 @extends('layouts.admin')
 
+@section('title', 'Data Orang Tua / Ibu Hamil')
+
 @section('content')
 <div class="space-y-6">
 
@@ -14,34 +16,17 @@
 
     <!-- HEADER TITLE & SUBTITLE -->
     <div>
-        <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Data Balita & Kependudukan</h2>
+        <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Data Balita & Kependudukan</h1>
         <p class="text-xs text-slate-500 mt-1">Kelola data kependudukan orang tua, ibu hamil, riwayat kontak, dan domisili terdaftar di posyandu.</p>
     </div>
 
-    <!-- TABS -->
-    <div class="flex items-center gap-8 border-b border-slate-200">
-        <!-- Tab 1: Daftar Balita -->
-        <a href="#" class="pb-3 text-sm font-semibold text-slate-500 hover:text-slate-800 transition-colors flex items-center gap-2">
-            <span>Daftar Balita</span>
-            <span class="px-2 py-0.5 text-xs font-semibold bg-slate-100 text-slate-600 rounded-full">
-                {{ $totalBalita > 0 ? $totalBalita : 142 }}
-            </span>
-        </a>
-
-        <!-- Tab 2: Data Orang Tua / Ibu Hamil (Active) -->
-        <a href="{{ route('kependudukan.orang-tua.index') }}" class="pb-3 text-sm font-bold text-[#008f7a] border-b-2 border-[#008f7a] flex items-center gap-2">
-            <span>Data Orang Tua / Ibu Hamil</span>
-            <span class="px-2 py-0.5 text-xs font-bold bg-[#e6f7f5] text-[#008f7a] rounded-full">
-                {{ $totalOrangTua > 0 ? $totalOrangTua : 98 }}
-            </span>
-        </a>
-    </div>
+    @include('kependudukan._tabs')
 
     <!-- 3 SUMMARY METRIC CARDS -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
         <!-- Card 1: Ibu Hamil Terpantau -->
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-[#e6f7f5] flex items-center justify-center text-[#008f7a] flex-shrink-0">
+            <div class="w-12 h-12 rounded-xl bg-teal-50 flex items-center justify-center text-teal-700 flex-shrink-0">
                 <!-- Female / Mother Icon -->
                 <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="5" r="3"/>
@@ -95,29 +80,18 @@
     <!-- FILTER & ACTION TOOLBAR -->
     <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
         <!-- Search & Filter Controls -->
-        <form method="GET" action="{{ route('kependudukan.orang-tua.index') }}" class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-            <!-- Search Input -->
-            <div class="relative w-full sm:w-64">
-                <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="11" cy="11" r="8"/>
-                        <path d="m21 21-4.3-4.3"/>
-                    </svg>
-                </span>
-                <input 
-                    type="text" 
-                    name="search" 
-                    value="{{ request('search') }}"
-                    placeholder="Cari NIK atau Nama Orang Tua..." 
-                    class="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#008f7a] transition-all"
-                >
-            </div>
+        <x-search-form results="search-results" :action="route('kependudukan.orang-tua.index')" class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+            <x-search-input
+                :value="request('search')"
+                placeholder="Cari NIK atau Nama Orang Tua..."
+                wrapper-class="w-full sm:w-64"
+            />
 
             <!-- Filter Status -->
             <select 
                 name="status" 
-                onchange="this.form.submit()" 
-                class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-[#008f7a]"
+                data-search-filter
+                class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-teal-500"
             >
                 <option value="all" {{ request('status') == 'all' ? 'selected' : '' }}>Semua Status</option>
                 <option value="hamil" {{ request('status') == 'hamil' ? 'selected' : '' }}>Ibu Hamil</option>
@@ -127,7 +101,7 @@
             <!-- Filter Posyandu / RT -->
             <select 
                 name="posyandu" 
-                class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-[#008f7a]"
+                class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-teal-500"
             >
                 <option value="">Semua Posyandu / RT</option>
                 <option value="posyandu_melati">Posyandu Melati</option>
@@ -135,7 +109,7 @@
                 <option value="posyandu_anggrek">Posyandu Anggrek</option>
                 <option value="posyandu_dahlia">Posyandu Dahlia</option>
             </select>
-        </form>
+        </x-search-form>
 
         <!-- Right Buttons: Ekspor & Tambah -->
         <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
@@ -150,10 +124,11 @@
             </button>
 
             <!-- + Tambah Orang Tua -->
+            @can('access-module', ['orang_tua', 'create'])
             <button 
                 type="button" 
                 onclick="openCreateModal()" 
-                class="flex items-center gap-2 px-4 py-2 bg-[#005953] hover:bg-[#004742] text-white rounded-lg text-xs font-semibold transition-colors shadow-sm"
+                class="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-semibold transition-colors shadow-sm"
             >
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <line x1="12" x2="12" y1="5" y2="19"/>
@@ -161,154 +136,117 @@
                 </svg>
                 <span>Tambah Orang Tua</span>
             </button>
+            @endcan
         </div>
     </div>
 
     <!-- TABLE CONTAINER -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider bg-white">
-                        <th class="py-4 px-6">Nama Lengkap</th>
-                        <th class="py-4 px-6">NIK</th>
-                        <th class="py-4 px-6">Status Kependudukan</th>
-                        <th class="py-4 px-6">Kontak / WhatsApp</th>
-                        <th class="py-4 px-6">Alamat Domisili</th>
-                        <th class="py-4 px-6 text-right">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 text-xs">
-                    @forelse($orangTuas as $ot)
-                    <tr class="hover:bg-slate-50/70 transition-colors">
-                        <!-- Nama Lengkap & Subtitle Anak / Riwayat -->
-                        <td class="py-4 px-6">
-                            <p class="font-bold text-slate-900 text-sm leading-tight">{{ $ot->name }}</p>
-                            @if($ot->pregnancy_status === 'hamil')
-                                <p class="text-[11px] text-cyan-600 font-medium mt-0.5">
-                                    Kunjungan Terakhir: {{ $ot->updated_at ? $ot->updated_at->translatedFormat('d M Y') : '12 Mei 2024' }}
-                                </p>
-                            @elseif($ot->balita && $ot->balita->count() > 0)
-                                <p class="text-[11px] text-slate-400 mt-0.5">
-                                    Ibu dari {{ $ot->balita->pluck('name')->join(' & ') }}
-                                </p>
-                            @else
-                                <p class="text-[11px] text-slate-400 mt-0.5">
-                                    Warga Terdaftar
-                                </p>
-                            @endif
-                        </td>
+    <x-table-card id="search-results" aria-live="polite">
+        <x-data-table>
+            <x-slot:head>
+                <tr>
+                    <th scope="col" class="py-4 px-6">Nama Lengkap</th>
+                    <th scope="col" class="py-4 px-6">NIK</th>
+                    <th scope="col" class="py-4 px-6">Status Kependudukan</th>
+                    <th scope="col" class="py-4 px-6">Kontak / WhatsApp</th>
+                    <th scope="col" class="py-4 px-6">Alamat Domisili</th>
+                    <th scope="col" class="py-4 px-6 text-right">Aksi</th>
+                </tr>
+            </x-slot:head>
 
-                        <!-- NIK -->
-                        <td class="py-4 px-6 font-mono text-slate-700 text-xs font-medium tracking-tight">
-                            {{ $ot->nik }}
-                        </td>
-
-                        <!-- Status Kependudukan Badge -->
-                        <td class="py-4 px-6">
-                            @if($ot->pregnancy_status === 'hamil')
-                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-[#e0f2fe] text-[#0284c7]">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-[#0284c7]"></span>
-                                    <span>Ibu Hamil (Trimester 2)</span>
-                                </span>
-                            @else
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600">
-                                    <span>Orang Tua</span>
-                                </span>
-                            @endif
-                        </td>
-
-                        <!-- Kontak / WhatsApp -->
-                        <td class="py-4 px-6 text-slate-700 font-mono text-xs">
-                            {{ $ot->kontak }}
-                        </td>
-
-                        <!-- Alamat Domisili -->
-                        <td class="py-4 px-6 text-slate-600 max-w-xs truncate" title="{{ $ot->alamat }}">
-                            {{ $ot->alamat }}
-                        </td>
-
-                        <!-- Aksi (Edit & Hapus) -->
-                        <td class="py-4 px-6 text-right whitespace-nowrap">
-                            <button 
-                                type="button" 
-                                onclick='openEditModal(@json($ot))' 
-                                class="text-[#008f7a] hover:text-[#005953] font-bold text-xs mr-3 transition-colors"
-                            >
-                                Edit
-                            </button>
-                            <button 
-                                type="button" 
-                                onclick="confirmDelete({{ $ot->id }}, '{{ addslashes($ot->name) }}')" 
-                                class="text-rose-600 hover:text-rose-800 font-bold text-xs transition-colors"
-                            >
-                                Hapus
-                            </button>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="6" class="py-12 text-center text-slate-400">
-                            <svg class="w-12 h-12 mx-auto text-slate-300 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                <circle cx="12" cy="12" r="10"/>
-                                <line x1="8" x2="16" y1="12" y2="12"/>
-                            </svg>
-                            <p class="font-medium text-sm text-slate-600">Tidak ada data orang tua ditemukan.</p>
-                            <p class="text-xs text-slate-400 mt-1">Silakan sesuaikan kata kunci pencarian atau tambah data baru.</p>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-
-        <!-- PAGINATION BAR -->
-        <div class="px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white">
-            <p class="text-xs text-slate-500">
-                Menampilkan 
-                <span class="font-semibold text-slate-800">{{ $orangTuas->firstItem() ?? 0 }}</span>
-                -
-                <span class="font-semibold text-slate-800">{{ $orangTuas->lastItem() ?? 0 }}</span>
-                dari 
-                <span class="font-semibold text-slate-800">{{ $orangTuas->total() }}</span>
-                data
-            </p>
-
-            <!-- Pagination Numbers -->
-            @if ($orangTuas->hasPages())
-            <div class="flex items-center gap-1">
-                {{-- Previous Page Link --}}
-                @if ($orangTuas->onFirstPage())
-                    <span class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 border border-slate-100 text-xs cursor-not-allowed">&lsaquo;</span>
-                @else
-                    <a href="{{ $orangTuas->previousPageUrl() }}" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-600 border border-slate-200 hover:bg-slate-50 text-xs transition-colors">&lsaquo;</a>
-                @endif
-
-                {{-- Pagination Elements --}}
-                @foreach ($orangTuas->getUrlRange(1, $orangTuas->lastPage()) as $page => $url)
-                    @if ($page == $orangTuas->currentPage())
-                        <span class="w-8 h-8 rounded-lg flex items-center justify-center bg-[#005953] text-white font-bold text-xs shadow-sm">{{ $page }}</span>
+            @forelse($orangTuas as $ot)
+            <tr class="hover:bg-slate-50/70 transition-colors">
+                <!-- Nama Lengkap & Subtitle Anak / Riwayat -->
+                <td class="py-4 px-6">
+                    <p class="font-bold text-slate-900 text-sm leading-tight">{{ $ot->name }}</p>
+                    @if($ot->pregnancy_status === 'hamil')
+                        <p class="text-[11px] text-cyan-600 font-medium mt-0.5">
+                            Kunjungan Terakhir: {{ $ot->updated_at ? $ot->updated_at->translatedFormat('d M Y') : '12 Mei 2024' }}
+                        </p>
+                    @elseif($ot->balita && $ot->balita->count() > 0)
+                        <p class="text-[11px] text-slate-400 mt-0.5">
+                            Ibu dari {{ $ot->balita->pluck('name')->join(' & ') }}
+                        </p>
                     @else
-                        <a href="{{ $url }}" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-600 border border-slate-200 hover:bg-slate-50 text-xs font-semibold transition-colors">{{ $page }}</a>
+                        <p class="text-[11px] text-slate-400 mt-0.5">
+                            Warga Terdaftar
+                        </p>
                     @endif
-                @endforeach
+                </td>
 
-                {{-- Next Page Link --}}
-                @if ($orangTuas->hasMorePages())
-                    <a href="{{ $orangTuas->nextPageUrl() }}" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-600 border border-slate-200 hover:bg-slate-50 text-xs transition-colors">&rsaquo;</a>
-                @else
-                    <span class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 border border-slate-100 text-xs cursor-not-allowed">&rsaquo;</span>
-                @endif
-            </div>
-            @endif
-        </div>
-    </div>
+                <!-- NIK -->
+                <td class="py-4 px-6 font-mono text-slate-700 text-xs font-medium tracking-tight">
+                    {{ $ot->nik }}
+                </td>
+
+                <!-- Status Kependudukan Badge -->
+                <td class="py-4 px-6">
+                    @if($ot->pregnancy_status === 'hamil')
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-[#e0f2fe] text-[#0284c7]">
+                            <span class="w-1.5 h-1.5 rounded-full bg-[#0284c7]"></span>
+                            <span>Ibu Hamil (Trimester 2)</span>
+                        </span>
+                    @else
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600">
+                            <span>Orang Tua</span>
+                        </span>
+                    @endif
+                </td>
+
+                <!-- Kontak / WhatsApp -->
+                <td class="py-4 px-6 text-slate-700 font-mono text-xs">
+                    {{ $ot->kontak }}
+                </td>
+
+                <!-- Alamat Domisili -->
+                <td class="py-4 px-6 text-slate-600 max-w-xs truncate" title="{{ $ot->alamat }}">
+                    {{ $ot->alamat }}
+                </td>
+
+                <!-- Aksi (Edit & Hapus) -->
+                <td class="py-4 px-6 text-right whitespace-nowrap">
+                    @can('access-module', ['orang_tua', 'edit'])
+                    <button
+                        type="button"
+                        onclick='openEditModal(@json($ot))'
+                        class="text-teal-700 hover:text-teal-700 font-bold text-xs mr-3 transition-colors"
+                    >
+                        Edit
+                    </button>
+                    @endcan
+                    @can('access-module', ['orang_tua', 'delete'])
+                    <button
+                        type="button"
+                        onclick="confirmDelete({{ $ot->id }}, '{{ addslashes($ot->name) }}')"
+                        class="text-rose-600 hover:text-rose-800 font-bold text-xs transition-colors"
+                    >
+                        Hapus
+                    </button>
+                    @endcan
+                </td>
+            </tr>
+            @empty
+            <tr>
+                <td colspan="6" class="py-12 text-center text-slate-400">
+                    <svg class="w-12 h-12 mx-auto text-slate-300 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="8" x2="16" y1="12" y2="12"/>
+                    </svg>
+                    <p class="font-medium text-sm text-slate-600">Tidak ada data orang tua ditemukan.</p>
+                    <p class="text-xs text-slate-400 mt-1">Silakan sesuaikan kata kunci pencarian atau tambah data baru.</p>
+                </td>
+            </tr>
+            @endforelse
+        </x-data-table>
+
+        <x-pagination :paginator="$orangTuas" label="orang tua" />
+    </x-table-card>
 </div>
 
 <!-- ============================================================== -->
 <!-- MODAL FORM TAMBAH / EDIT ORANG TUA (SESUAI GAMBAR REFERENSI)   -->
 <!-- ============================================================== -->
-<div id="modalForm" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+<div id="modalForm" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/50 backdrop-blur-sm items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-[460px] w-full p-7 shadow-2xl border border-slate-100 transform transition-all relative">
         
         <!-- Modal Header -->
@@ -345,7 +283,7 @@
                         required 
                         placeholder="Contoh: 3273012345670001" 
                         oninput="validateNikInput(this)"
-                        class="w-full px-4 py-2.5 bg-[#f8fafc] border border-slate-200 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6ba299] focus:border-transparent transition-all pr-11"
+                        class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all pr-11"
                     >
                     <!-- Icon Indicator inside Input (Exclamation or Checkmark) -->
                     <div id="nikInputIcon" class="absolute inset-y-0 right-0 flex items-center pr-3.5 pointer-events-none hidden">
@@ -384,7 +322,7 @@
                     id="formName" 
                     required 
                     placeholder="e.g. Dewi Lestari" 
-                    class="w-full px-4 py-2.5 bg-[#f8fafc] border border-slate-200 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6ba299] focus:border-transparent transition-all"
+                    class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
                 >
             </div>
 
@@ -397,7 +335,7 @@
                     <select 
                         id="formPregnancyStatus" 
                         required 
-                        class="w-full appearance-none px-4 py-2.5 pr-10 bg-[#f8fafc] border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6ba299] focus:border-transparent transition-all cursor-pointer"
+                        class="w-full appearance-none px-4 py-2.5 pr-10 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all cursor-pointer"
                     >
                         <option value="tidak_hamil" selected>Orang Tua</option>
                         <option value="hamil">Ibu Hamil</option>
@@ -421,7 +359,7 @@
                     id="formKontak" 
                     required
                     placeholder="0812-xxxx-xxxx" 
-                    class="w-full px-4 py-2.5 bg-[#f8fafc] border border-slate-200 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6ba299] focus:border-transparent transition-all"
+                    class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
                 >
             </div>
 
@@ -435,13 +373,13 @@
                     rows="3" 
                     required
                     placeholder="Tuliskan alamat lengkap domisili dan RT/RW..." 
-                    class="w-full px-4 py-2.5 bg-[#f8fafc] border border-slate-200 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6ba299] focus:border-transparent transition-all resize-none"
+                    class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all resize-none"
                 ></textarea>
             </div>
 
             <!-- INFO BANNER: SINKRONISASI DUKCAPIL -->
             <div class="bg-[#eff6ff] rounded-xl px-4 py-3 flex items-center gap-3 text-xs text-slate-700 font-medium">
-                <svg class="w-4 h-4 text-[#008f7a] flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <svg class="w-4 h-4 text-teal-700 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
                     <path d="M3 3v5h5"/>
                     <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
@@ -465,7 +403,7 @@
                 <button 
                     type="submit" 
                     id="submitBtn" 
-                    class="px-5 py-2.5 bg-[#6ba299] hover:bg-[#5a9289] text-white font-semibold text-sm rounded-xl shadow-sm transition-all flex items-center gap-2"
+                    class="px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-semibold text-sm rounded-xl shadow-sm transition-all flex items-center gap-2"
                 >
                     <!-- Padlock / Lock Icon -->
                     <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -505,13 +443,13 @@
             // Kosong
             nikCounter.className = 'text-xs font-semibold text-slate-400 font-mono tracking-tight';
             input.classList.remove('border-rose-400', 'bg-rose-50/20', 'border-emerald-500');
-            input.classList.add('border-slate-200', 'bg-[#f8fafc]');
+            input.classList.add('border-slate-200', 'bg-slate-50');
             nikInputIcon.classList.add('hidden');
             nikAlertBox.classList.add('hidden');
         } else if (len < 16) {
             // Kurang dari 16 digit (Warning state seperti gambar referensi)
             nikCounter.className = 'text-xs font-semibold text-rose-700 font-mono tracking-tight';
-            input.classList.remove('border-slate-200', 'bg-[#f8fafc]', 'border-emerald-500');
+            input.classList.remove('border-slate-200', 'bg-slate-50', 'border-emerald-500');
             input.classList.add('border-rose-400', 'bg-rose-50/20');
             nikInputIcon.classList.remove('hidden');
             nikErrorIcon.classList.remove('hidden');
@@ -535,7 +473,7 @@
         form.reset();
         validateNikInput(nikInput);
         modalTitle.innerText = 'Tambah Data Orang Tua';
-        modal.classList.remove('hidden');
+        modal.classList.replace('hidden', 'flex');
     }
 
     function openEditModal(data) {
@@ -548,11 +486,11 @@
 
         validateNikInput(nikInput);
         modalTitle.innerText = 'Edit Data Orang Tua';
-        modal.classList.remove('hidden');
+        modal.classList.replace('hidden', 'flex');
     }
 
     function closeModal() {
-        modal.classList.add('hidden');
+        modal.classList.replace('flex', 'hidden');
     }
 
     async function submitForm(e) {
@@ -597,6 +535,14 @@
                 },
                 body: JSON.stringify(payload)
             });
+
+            if (response.status === 401) {
+
+                window.location.assign(@js(route('login')));
+
+                return;
+
+            }
 
             const data = await response.json();
 
@@ -662,6 +608,14 @@
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     }
                 });
+
+                if (response.status === 401) {
+
+                    window.location.assign(@js(route('login')));
+
+                    return;
+
+                }
 
                 const data = await response.json();
 

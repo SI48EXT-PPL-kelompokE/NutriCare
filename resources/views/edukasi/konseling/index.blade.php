@@ -18,6 +18,7 @@
         </div>
 
         <div class="flex items-center gap-2">
+            @can('access-module', ['konseling', 'create'])
             <a href="{{ route('konseling.create') }}" 
                class="inline-flex items-center gap-2 px-4 py-2.5 bg-[#008f7a] hover:bg-[#007a68] text-white text-xs font-semibold rounded-xl transition-colors shadow-sm">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -26,6 +27,7 @@
                 </svg>
                 <span>Ajukan Sesi Konseling</span>
             </a>
+            @endcan
         </div>
     </div>
 
@@ -75,27 +77,14 @@
 
     <!-- Filter & bilah pencarian -->
     <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
-        <form action="{{ route('konseling.index') }}" method="GET" id="filterKonselingForm" class="flex flex-col md:flex-row md:items-center gap-3">
-            <div class="relative flex-1">
-                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                </div>
-                <input 
-                    type="text" 
-                    name="q" 
-                    id="searchKonselingInput"
-                    value="{{ request('q') }}" 
-                    placeholder="Cari nama orang tua, NIK, atau topik keluhan..." 
-                    class="w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#008f7a] focus:bg-white transition-all"
-                >
-            </div>
+        <x-search-form results="search-results" :action="route('konseling.index')" id="filterKonselingForm" class="flex flex-col md:flex-row md:items-center gap-3">
+            <x-search-input name="q" id="searchKonselingInput" :value="request('q')" placeholder="Cari nama orang tua, NIK, atau topik keluhan..." wrapper-class="w-full min-w-0 sm:min-w-56 sm:flex-1" />
 
             <div class="w-full md:w-44">
                 <select 
                     name="status" 
                     id="filterStatus"
+                    data-search-filter
                     class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#008f7a] focus:bg-white transition-all"
                 >
                     <option value="">Semua Status</option>
@@ -109,6 +98,7 @@
                 <select 
                     name="topik" 
                     id="filterTopik"
+                    data-search-filter
                     class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#008f7a] focus:bg-white transition-all"
                 >
                     <option value="">Semua Topik Konseling</option>
@@ -125,164 +115,120 @@
                     </svg>
                     <span>Filter</span>
                 </button>
-                @if(request('q') || request('status') || request('topik'))
-                    <a href="{{ route('konseling.index') }}" class="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded-xl transition-colors">
-                        Reset
-                    </a>
-                @endif
+                <a href="{{ route('konseling.index') }}" id="reset-konseling-search" data-search-sync
+                    @if (!request()->anyFilled(['q', 'status', 'topik'])) hidden @endif
+                    class="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded-xl transition-colors">
+                    Reset
+                </a>
             </div>
-        </form>
+        </x-search-form>
     </div>
 
     <!-- Tabel daftar sesi konseling -->
-    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs text-slate-600">
-                <thead class="bg-slate-50 text-[11px] font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-200">
-                    <tr>
-                        <th class="py-3.5 px-4">Orang Tua & Balita</th>
-                        <th class="py-3.5 px-4">Topik Konsultasi</th>
-                        <th class="py-3.5 px-4">Nakes Pendamping</th>
-                        <th class="py-3.5 px-4">Jadwal Sesi</th>
-                        <th class="py-3.5 px-4">Status</th>
-                        <th class="py-3.5 px-4 text-center">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 font-medium">
-                    @forelse ($sesiList as $sesi)
-                        <tr class="hover:bg-slate-50/70 transition-colors">
-                            <td class="py-3.5 px-4">
-                                <span class="font-bold text-slate-900 block">{{ $sesi->orangTua->name ?? 'Orang Tua' }}</span>
-                                <span class="text-[11px] text-slate-400 block font-normal">NIK: {{ $sesi->orangTua->nik ?? '-' }} • Kontak: {{ $sesi->orangTua->kontak ?? '-' }}</span>
-                            </td>
-                            <td class="py-3.5 px-4">
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700">
-                                    {{ $sesi->topik }}
-                                </span>
-                            </td>
-                            <td class="py-3.5 px-4">
-                                @if ($sesi->nakes)
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-6 h-6 rounded-full bg-teal-100 text-[#008f7a] flex items-center justify-center font-bold text-[10px]">
-                                            {{ substr($sesi->nakes->name, 0, 1) }}
-                                        </div>
-                                        <span class="text-slate-800 text-xs font-medium">{{ $sesi->nakes->name }}</span>
-                                    </div>
-                                @else
-                                    <span class="text-slate-400 italic text-[11px]">Belum ditugaskan</span>
-                                @endif
-                            </td>
-                            <td class="py-3.5 px-4 text-slate-600">
-                                @if ($sesi->jadwal)
-                                    <span class="block font-medium text-slate-800">{{ $sesi->jadwal->format('d M Y') }}</span>
-                                    <span class="text-[11px] text-slate-400">{{ $sesi->jadwal->format('H:i') }} WIB</span>
-                                @else
-                                    <span class="text-slate-400 italic text-[11px]">Menunggu penetapan</span>
-                                @endif
-                            </td>
-                            <td class="py-3.5 px-4">
-                                @if ($sesi->status === 'diajukan')
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-                                        Diajukan
-                                    </span>
-                                @elseif ($sesi->status === 'dijadwalkan')
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold bg-sky-50 text-sky-700 border border-sky-200">
-                                        Dijadwalkan
-                                    </span>
-                                @elseif ($sesi->status === 'selesai')
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                        Selesai
-                                    </span>
-                                @else
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700">
-                                        {{ ucfirst($sesi->status) }}
-                                    </span>
-                                @endif
-                            </td>
-                            <td class="py-3.5 px-4 text-center">
-                                <div class="flex items-center justify-center gap-1.5">
-                                    <a href="{{ route('konseling.show', $sesi->id) }}" 
-                                       title="Lihat Detail & Tindakan" 
-                                       class="p-1.5 text-slate-500 hover:text-[#008f7a] hover:bg-[#ecfdf5] rounded-lg transition-colors">
-                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
-                                            <circle cx="12" cy="12" r="3"></circle>
-                                        </svg>
-                                    </a>
-                                    <form action="{{ route('konseling.destroy', $sesi->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data sesi konseling ini?');" class="inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" 
-                                                title="Hapus Sesi" 
-                                                class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors">
-                                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <path d="M3 6h18"></path>
-                                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                                            </svg>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="py-12 text-center text-slate-400">
-                                <svg class="w-12 h-12 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-                                </svg>
-                                <p class="text-sm font-semibold text-slate-700">Tidak ada sesi konseling ditemukan</p>
-                                <p class="text-xs text-slate-400 mt-1">Coba sesuaikan kata kunci pencarian atau bersihkan filter yang aktif.</p>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+    <x-table-card id="search-results" aria-live="polite">
+        <x-data-table>
+            <x-slot:head>
+                <tr>
+                    <th scope="col" class="py-3.5 px-4">Orang Tua & Balita</th>
+                    <th scope="col" class="py-3.5 px-4">Topik Konsultasi</th>
+                    <th scope="col" class="py-3.5 px-4">Nakes Pendamping</th>
+                    <th scope="col" class="py-3.5 px-4">Jadwal Sesi</th>
+                    <th scope="col" class="py-3.5 px-4">Status</th>
+                    <th scope="col" class="py-3.5 px-4 text-center">Aksi</th>
+                </tr>
+            </x-slot:head>
 
-        @if ($sesiList->hasPages())
-            <div class="px-4 py-3 border-t border-slate-200 bg-slate-50">
-                {{ $sesiList->links() }}
-            </div>
-        @endif
-    </div>
+            @forelse ($sesiList as $sesi)
+                <tr class="hover:bg-slate-50/70 transition-colors">
+                    <td class="py-3.5 px-4">
+                        <span class="font-bold text-slate-900 block">{{ $sesi->orangTua->name ?? 'Orang Tua' }}</span>
+                        <span class="text-[11px] text-slate-400 block font-normal">NIK: {{ $sesi->orangTua->nik ?? '-' }} • Kontak: {{ $sesi->orangTua->kontak ?? '-' }}</span>
+                    </td>
+                    <td class="py-3.5 px-4">
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700">
+                            {{ $sesi->topik }}
+                        </span>
+                    </td>
+                    <td class="py-3.5 px-4">
+                        @if ($sesi->nakes)
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 rounded-full bg-teal-100 text-[#008f7a] flex items-center justify-center font-bold text-[10px]">
+                                    {{ substr($sesi->nakes->name, 0, 1) }}
+                                </div>
+                                <span class="text-slate-800 text-xs font-medium">{{ $sesi->nakes->name }}</span>
+                            </div>
+                        @else
+                            <span class="text-slate-400 italic text-[11px]">Belum ditugaskan</span>
+                        @endif
+                    </td>
+                    <td class="py-3.5 px-4 text-slate-600">
+                        @if ($sesi->jadwal)
+                            <span class="block font-medium text-slate-800">{{ $sesi->jadwal->format('d M Y') }}</span>
+                            <span class="text-[11px] text-slate-400">{{ $sesi->jadwal->format('H:i') }} WIB</span>
+                        @else
+                            <span class="text-slate-400 italic text-[11px]">Menunggu penetapan</span>
+                        @endif
+                    </td>
+                    <td class="py-3.5 px-4">
+                        @if ($sesi->status === 'diajukan')
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                                Diajukan
+                            </span>
+                        @elseif ($sesi->status === 'dijadwalkan')
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold bg-sky-50 text-sky-700 border border-sky-200">
+                                Dijadwalkan
+                            </span>
+                        @elseif ($sesi->status === 'selesai')
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                Selesai
+                            </span>
+                        @else
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700">
+                                {{ ucfirst($sesi->status) }}
+                            </span>
+                        @endif
+                    </td>
+                    <td class="py-3.5 px-4 text-center">
+                        <div class="flex items-center justify-center gap-1.5">
+                            <a href="{{ route('konseling.show', $sesi->id) }}"
+                               title="Lihat Detail & Tindakan"
+                               class="p-1.5 text-slate-500 hover:text-[#008f7a] hover:bg-[#ecfdf5] rounded-lg transition-colors">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </a>
+                            <form action="{{ route('konseling.destroy', $sesi->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data sesi konseling ini?');" class="inline">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit"
+                                        title="Hapus Sesi"
+                                        class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors">
+                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M3 6h18"></path>
+                                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                                    </svg>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="6" class="py-12 text-center text-slate-400">
+                        <svg class="w-12 h-12 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                        </svg>
+                        <p class="text-sm font-semibold text-slate-700">Tidak ada sesi konseling ditemukan</p>
+                        <p class="text-xs text-slate-400 mt-1">Coba sesuaikan kata kunci pencarian atau bersihkan filter yang aktif.</p>
+                    </td>
+                </tr>
+            @endforelse
+        </x-data-table>
+
+        <x-pagination :paginator="$sesiList" label="sesi konseling" />
+    </x-table-card>
 
 </div>
 @endsection
-
-@push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const filterForm = document.getElementById('filterKonselingForm');
-        const filterStatus = document.getElementById('filterStatus');
-        const filterTopik = document.getElementById('filterTopik');
-        const searchInput = document.getElementById('searchKonselingInput');
-
-        if (filterForm) {
-            if (filterStatus) {
-                filterStatus.addEventListener('change', () => filterForm.submit());
-            }
-
-            if (filterTopik) {
-                filterTopik.addEventListener('change', () => filterForm.submit());
-            }
-
-            let debounceTimer;
-            if (searchInput) {
-                searchInput.addEventListener('input', function () {
-                    clearTimeout(debounceTimer);
-                    debounceTimer = setTimeout(() => filterForm.submit(), 500);
-                });
-
-                if (searchInput.value) {
-                    searchInput.focus();
-                    const val = searchInput.value;
-                    searchInput.value = '';
-                    searchInput.value = val;
-                }
-            }
-        }
-    });
-</script>
-@endpush
-

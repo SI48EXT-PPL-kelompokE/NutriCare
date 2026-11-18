@@ -138,22 +138,19 @@
             </div>
 
             <!-- Table of Dynamic Items -->
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm" id="komposisiTable">
-                    <thead class="bg-slate-50 text-slate-600 text-xs font-semibold uppercase tracking-wider border-b border-slate-200">
-                        <tr>
-                            <th class="py-2.5 px-3">Bahan Makanan</th>
-                            <th class="py-2.5 px-3 w-36">Takaran / Jumlah</th>
-                            <th class="py-2.5 px-3 w-28">Satuan</th>
-                            <th class="py-2.5 px-3 text-right w-28">Subtotal Energi</th>
-                            <th class="py-2.5 px-3 w-12 text-center">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100" id="komposisiBody">
-                        <!-- Rows injected via JS or old inputs -->
-                    </tbody>
-                </table>
-            </div>
+            <x-data-table id="komposisiTable" body-id="komposisiBody">
+                <x-slot:head>
+                    <tr>
+                        <th scope="col" class="py-2.5 px-3">Bahan Makanan</th>
+                        <th scope="col" class="py-2.5 px-3 w-36">Takaran / Jumlah</th>
+                        <th scope="col" class="py-2.5 px-3 w-28">Satuan</th>
+                        <th scope="col" class="py-2.5 px-3 text-right w-28">Subtotal Energi</th>
+                        <th scope="col" class="py-2.5 px-3 w-12 text-center">Aksi</th>
+                    </tr>
+                </x-slot:head>
+
+                <!-- Rows injected via JS or old inputs -->
+            </x-data-table>
 
             <!-- Anti-duplicate warning -->
             <div id="duplicateWarning" class="hidden p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-medium">
