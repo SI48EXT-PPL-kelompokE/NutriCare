@@ -2,8 +2,13 @@
 
 namespace App\Providers;
 
+use App\Contracts\Paket4\NakesLookup;
+use App\Adapters\Paket4\EloquentNakesLookup;
+use App\Models\JadwalPosyandu;
 use App\Models\Role;
 use App\Models\User;
+use App\Policies\JadwalPosyanduPolicy;
+use App\Services\ZScoreService;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -14,7 +19,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(NakesLookup::class, EloquentNakesLookup::class);
+        
+        // ZScoreService sebagai singleton untuk caching optimal
+        $this->app->singleton(ZScoreService::class);
     }
 
     /**
@@ -36,5 +44,7 @@ class AppServiceProvider extends ServiceProvider
                 ->where('can_view', true)
                 ->exists();
         });
+
+        Gate::policy(JadwalPosyandu::class, JadwalPosyanduPolicy::class);
     }
 }

@@ -114,3 +114,6 @@ Route::prefix('kependudukan')->name('kependudukan.')->middleware('auth:web')->gr
 // Legacy redirect
 Route::redirect('/orang-tua', '/kependudukan/orang-tua');
 Route::redirect('/balita', '/kependudukan/balita');
+
+// Modul Operasional & Rujukan - Paket 4 (Syifa)
+require __DIR__ . '/paket4.php';
