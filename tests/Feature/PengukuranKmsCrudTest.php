@@ -125,10 +125,6 @@ class PengukuranKmsCrudTest extends TestCase
             'berat_badan' => 10.5,
             'tinggi_badan' => 80.0,
             'lingkar_lengan_atas' => 12.5,
-            'z_score_bbu' => null,
-            'z_score_tbu' => null,
-            'z_score_bbtb' => null,
-            'status_gizi' => null,
         ]);
     }
 

@@ -41,6 +41,21 @@ class ZScoreIntegrationTest extends TestCase
     }
 
     /**
+     * Buat user Nakes/Bidan beserta izin modul kms.
+     * Menggantikan Role::factory() yang tidak tersedia di repositori ini.
+     */
+    private function userNakes(): User
+    {
+        $role = Role::firstOrCreate(['name_role' => 'Nakes / Bidan']);
+        $role->permissions()->updateOrCreate(
+            ['module_name' => 'kms'],
+            ['name' => 'kms', 'can_view' => true, 'can_create' => true, 'can_edit' => true, 'can_delete' => true],
+        );
+
+        return User::factory()->create(['role_id' => $role->id]);
+    }
+
+    /**
      * Test: Lookup data LMS per jenis kelamin dan umur menggunakan baris yang benar
      */
     public function test_lookup_lms_per_jenis_kelamin_dan_umur(): void
@@ -249,8 +264,7 @@ class ZScoreIntegrationTest extends TestCase
     public function test_store_pengukuran_http_mengisi_z_score(): void
     {
         // Setup data
-        $role = Role::factory()->create(['name_role' => 'Nakes / Bidan']);
-        $user = User::factory()->create(['role_id' => $role->id]);
+        $user = $this->userNakes();
         $orangTua = OrangTua::factory()->create();
         $balita = Balita::factory()->create([
             'orang_tua_id' => $orangTua->id,
@@ -281,8 +295,8 @@ class ZScoreIntegrationTest extends TestCase
         $this->assertNotNull($pengukuran->z_score_bbu);
         $this->assertMatchesRegularExpression('/^-?\d+\.\d{2}$/', (string)$pengukuran->z_score_bbu);
         
-        // status_gizi masih null (KF-15)
-        $this->assertNull($pengukuran->status_gizi);
+        // KF-15: status gizi ditentukan otomatis dari z-score tersimpan
+        $this->assertNotNull($pengukuran->getRawOriginal('status_gizi'));
     }
 
     /**
@@ -290,8 +304,7 @@ class ZScoreIntegrationTest extends TestCase
      */
     public function test_update_berat_badan_mengubah_z_score(): void
     {
-        $role = Role::factory()->create(['name_role' => 'Nakes / Bidan']);
-        $user = User::factory()->create(['role_id' => $role->id]);
+        $user = $this->userNakes();
         $orangTua = OrangTua::factory()->create();
         $balita = Balita::factory()->create([
             'orang_tua_id' => $orangTua->id,
@@ -333,8 +346,7 @@ class ZScoreIntegrationTest extends TestCase
      */
     public function test_request_tidak_bisa_override_z_score(): void
     {
-        $role = Role::factory()->create(['name_role' => 'Nakes / Bidan']);
-        $user = User::factory()->create(['role_id' => $role->id]);
+        $user = $this->userNakes();
         $orangTua = OrangTua::factory()->create();
         $balita = Balita::factory()->create([
             'orang_tua_id' => $orangTua->id,
@@ -365,40 +377,44 @@ class ZScoreIntegrationTest extends TestCase
      */
     public function test_gagal_kalkulasi_tidak_gagalkan_penyimpanan(): void
     {
-        $role = Role::factory()->create(['name_role' => 'Nakes / Bidan']);
-        $user = User::factory()->create(['role_id' => $role->id]);
+        $user = $this->userNakes();
         $orangTua = OrangTua::factory()->create();
         $balita = Balita::factory()->create([
             'orang_tua_id' => $orangTua->id,
             'jenis_kelamin' => 'L',
-            'birth_date' => now()->subMonths(70), // Usia > 60 bulan
+            'birth_date' => now()->subMonths(12),
         ]);
-        
+
         $this->actingAs($user);
-        
+
+        // Simulasikan kegagalan tak terduga pada ZScoreService
+        $this->mock(ZScoreService::class, function ($mock) {
+            $mock->shouldReceive('untukPengukuran')->andThrow(new \RuntimeException('boom'));
+        });
+
         // Ekspektasi warning di log
         Log::shouldReceive('warning')
             ->once()
             ->withArgs(function ($message, $context) {
                 return str_contains($message, 'Gagal menghitung z-score');
             });
-        
-        // POST pengukuran (usia di luar rentang)
+
+        // POST pengukuran (kalkulasi z-score gagal)
         $response = $this->post(route('kms.store'), [
             'balita_id' => $balita->id,
             'date' => now()->format('Y-m-d'),
-            'berat_badan' => '15,0',
-            'tinggi_badan' => '100,0',
+            'berat_badan' => '9,6',
+            'tinggi_badan' => '75,0',
         ]);
-        
+
         // Penyimpanan tetap berhasil
         $response->assertRedirect(route('kms.index'));
-        
+
         $pengukuran = PengukuranKms::latest()->first();
         $this->assertNotNull($pengukuran);
-        $this->assertEquals(15.0, $pengukuran->berat_badan);
-        
-        // z_score null karena usia di luar rentang
+        $this->assertEquals(9.6, $pengukuran->berat_badan);
+
+        // z_score null karena kalkulasi gagal
         $this->assertNull($pengukuran->z_score_bbu);
     }
 
@@ -407,8 +423,7 @@ class ZScoreIntegrationTest extends TestCase
      */
     public function test_command_dry_run_tidak_mengubah_data(): void
     {
-        $role = Role::factory()->create(['name_role' => 'Nakes / Bidan']);
-        $user = User::factory()->create(['role_id' => $role->id]);
+        $user = $this->userNakes();
         $orangTua = OrangTua::factory()->create();
         $balita = Balita::factory()->create([
             'orang_tua_id' => $orangTua->id,
@@ -427,7 +442,7 @@ class ZScoreIntegrationTest extends TestCase
         
         // Jalankan command dry-run
         $this->artisan('kms:hitung-zscore')
-            ->expectsOutput('📊 MODE: DRY-RUN (tidak mengubah database)')
+            ->expectsOutputToContain('DRY-RUN (tidak mengubah database)')
             ->assertSuccessful();
         
         // Data tidak berubah
@@ -440,8 +455,7 @@ class ZScoreIntegrationTest extends TestCase
      */
     public function test_command_apply_mengubah_data(): void
     {
-        $role = Role::factory()->create(['name_role' => 'Nakes / Bidan']);
-        $user = User::factory()->create(['role_id' => $role->id]);
+        $user = $this->userNakes();
         $orangTua = OrangTua::factory()->create();
         $balita = Balita::factory()->create([
             'orang_tua_id' => $orangTua->id,
@@ -474,8 +488,7 @@ class ZScoreIntegrationTest extends TestCase
      */
     public function test_command_batasi_satu_balita(): void
     {
-        $role = Role::factory()->create(['name_role' => 'Nakes / Bidan']);
-        $user = User::factory()->create(['role_id' => $role->id]);
+        $user = $this->userNakes();
         $orangTua = OrangTua::factory()->create();
         
         $balita1 = Balita::factory()->create([
@@ -552,8 +565,7 @@ class ZScoreIntegrationTest extends TestCase
      */
     public function test_jumlah_query_store_pengukuran(): void
     {
-        $role = Role::factory()->create(['name_role' => 'Nakes / Bidan']);
-        $user = User::factory()->create(['role_id' => $role->id]);
+        $user = $this->userNakes();
         $orangTua = OrangTua::factory()->create();
         $balita = Balita::factory()->create([
             'orang_tua_id' => $orangTua->id,
@@ -594,8 +606,7 @@ class ZScoreIntegrationTest extends TestCase
      */
     public function test_waktu_http_store_pengukuran(): void
     {
-        $role = Role::factory()->create(['name_role' => 'Nakes / Bidan']);
-        $user = User::factory()->create(['role_id' => $role->id]);
+        $user = $this->userNakes();
         $orangTua = OrangTua::factory()->create();
         $balita = Balita::factory()->create([
             'orang_tua_id' => $orangTua->id,

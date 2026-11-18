@@ -78,7 +78,8 @@ php artisan serve
 ```
 
 Untuk detail skema database, lihat [docs/DATABASE.md](docs/DATABASE.md).  
-Untuk detail perhitungan z-score, lihat [docs/ZSCORE.md](docs/ZSCORE.md).
+Untuk detail perhitungan z-score, lihat [docs/ZSCORE.md](docs/ZSCORE.md).  
+Untuk detail penentuan status gizi otomatis, lihat [docs/STATUS_GIZI.md](docs/STATUS_GIZI.md).
 
 ## Alur Git
 
