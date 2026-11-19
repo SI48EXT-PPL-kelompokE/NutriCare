@@ -81,7 +81,7 @@ class ZScoreService
      * @param float $k Z-score target (-3, -2, -1, 0, 1, 2, 3)
      * @return float Nilai SD yang sesuai
      */
-    private static function hitungSD(float $l, float $m, float $s, float $k): float
+    public static function hitungSD(float $l, float $m, float $s, float $k): float
     {
         if (abs($l) > 0.0001) {
             return $m * pow(1 + $l * $s * $k, 1 / $l);

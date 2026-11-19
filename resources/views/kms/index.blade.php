@@ -5,7 +5,7 @@
 @section('content')
     <!-- Breadcrumb -->
     <div class="flex items-center gap-2 text-xs font-medium text-slate-400 mb-6">
-        <a href="#" class="hover:text-slate-600">KMS Digital</a>
+        <a href="{{ route('kms.index') }}" class="hover:text-slate-600">KMS Digital</a>
         <span>/</span>
         <span class="text-slate-700 font-semibold">Pengukuran</span>
     </div>
@@ -155,6 +155,14 @@
                         <td class="px-4 py-3 text-sm text-slate-700">{{ $item->petugas->name ?? '-' }}</td>
                         <td class="px-4 py-3 text-right">
                             <div class="flex items-center justify-end gap-2">
+                                <a href="{{ route('balita.pertumbuhan', $item->balita) }}"
+                                   class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-teal-700 hover:bg-teal-50 rounded transition-colors"
+                                   title="Lihat Grafik Pertumbuhan">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M22 12h-4l-3 9-6-18-3 9H2"/>
+                                    </svg>
+                                    Grafik
+                                </a>
                                 <a href="{{ route('kms.show', $item) }}"
                                    class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-teal-700 hover:bg-teal-50 rounded transition-colors"
                                    title="Lihat Detail">
