@@ -190,15 +190,12 @@
                 <!-- Aksi: Lihat KMS & Menu Dropdown Tiga Titik -->
                 <td class="py-4 px-6 text-right whitespace-nowrap">
                     <div class="inline-flex items-center justify-end gap-2">
-                        <button
-                            type="button"
-                            disabled
-                            aria-disabled="true"
-                            title="Integrasi KMS belum tersedia"
-                            class="text-teal-700/60 font-bold text-xs disabled:cursor-not-allowed"
+                        <a href="{{ route('balita.pertumbuhan', $balita) }}"
+                            title="Lihat KMS Digital"
+                            class="text-teal-700 font-bold text-xs hover:underline focus-visible:outline-teal-500"
                         >
                             Lihat KMS
-                        </button>
+                        </a>
 
                         <div class="relative inline-block text-left">
                             <button

@@ -4,9 +4,11 @@ namespace App\Providers;
 
 use App\Contracts\Paket4\NakesLookup;
 use App\Adapters\Paket4\EloquentNakesLookup;
+use App\Models\Balita;
 use App\Models\JadwalPosyandu;
 use App\Models\Role;
 use App\Models\User;
+use App\Policies\BalitaPolicy;
 use App\Policies\JadwalPosyanduPolicy;
 use App\Services\ZScoreService;
 use Illuminate\Support\Facades\Gate;
@@ -45,6 +47,11 @@ class AppServiceProvider extends ServiceProvider
                 ->exists();
         });
 
+        // KF-16: menu "KMS Anak Saya" hanya untuk Warga/Orang Tua.
+        Gate::define('access-kms-anak-saya', fn (User $user): bool => $user->active_status
+            && $user->role?->name_role === Role::RESIDENT);
+
         Gate::policy(JadwalPosyandu::class, JadwalPosyanduPolicy::class);
+        Gate::policy(Balita::class, BalitaPolicy::class);
     }
 }

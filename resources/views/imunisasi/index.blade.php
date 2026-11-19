@@ -5,7 +5,7 @@
 @section('content')
     <!-- Breadcrumb -->
     <div class="flex items-center gap-2 text-xs font-medium text-slate-400 mb-6">
-        <a href="#" class="hover:text-slate-600">KMS Digital</a>
+        <a href="{{ route('kms.index') }}" class="hover:text-slate-600">KMS Digital</a>
         <span>/</span>
         <span class="text-slate-700 font-semibold">Riwayat Imunisasi</span>
     </div>
@@ -18,12 +18,12 @@
 
     <!-- Tab Navigasi KMS Digital -->
     <div class="flex items-center gap-2 border-b border-slate-200 text-xs font-semibold text-slate-500 pb-px mb-6">
-        <span class="inline-flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-slate-400 cursor-not-allowed">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <a href="{{ route('kms.index') }}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors">
+            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
             </svg>
             <span>Pengukuran</span>
-        </span>
+        </a>
 
         <a href="{{ route('imunisasi.index') }}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-teal-700 font-bold border-b-2 border-teal-600 bg-white">
             <svg class="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

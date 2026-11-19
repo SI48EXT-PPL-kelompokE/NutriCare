@@ -133,7 +133,13 @@
                 </div>
 
                 <!-- Aksi -->
-                <div class="p-4 border-t border-slate-200 flex items-center gap-3">
+                <div class="p-4 border-t border-slate-200 flex flex-wrap items-center gap-3">
+                    <a href="{{ route('balita.pertumbuhan', $kms->balita) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white text-sm font-semibold rounded-lg hover:bg-teal-700 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M22 12h-4l-3 9-6-18-3 9H2"/>
+                        </svg>
+                        Lihat Grafik Pertumbuhan
+                    </a>
                     @can('access-module', ['kms', 'edit'])
                     <a href="{{ route('kms.edit', $kms) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -290,8 +296,8 @@
                 </x-data-table>
 
                 <div class="p-4 border-t border-slate-200 text-xs text-slate-500">
-                    <strong>Catatan:</strong> Δ (delta) menunjukkan selisih dari pengukuran sebelumnya. 
-                    Grafik pertumbuhan akan tersedia di fitur KF-16.
+                    <strong>Catatan:</strong> Δ (delta) menunjukkan selisih dari pengukuran sebelumnya.
+                    <a href="{{ route('balita.pertumbuhan', $kms->balita) }}" class="font-semibold text-teal-700 hover:underline">Lihat grafik pertumbuhan →</a>
                 </div>
             </x-table-card>
         </div>

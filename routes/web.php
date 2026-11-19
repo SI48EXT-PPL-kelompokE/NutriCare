@@ -3,6 +3,7 @@
 use App\Http\Controllers\ArtikelController;
 use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\BalitaViewController;
+use App\Http\Controllers\GrafikPertumbuhanController;
 use App\Http\Controllers\ImunisasiController;
 use App\Http\Controllers\OrangTuaViewController;
 use App\Http\Controllers\PaketPmtController;
@@ -95,6 +96,10 @@ Route::middleware('auth:web')->group(function () {
         ->middlewareFor(['create', 'store'], "can:access-module,'imunisasi','create'")
         ->middlewareFor(['edit', 'update'], "can:access-module,'imunisasi','edit'")
         ->middlewareFor('destroy', "can:access-module,'imunisasi','delete'");
+
+    // KF-16: Grafik pertumbuhan balita (Chart.js)
+    Route::get('kms-anak-saya', [GrafikPertumbuhanController::class, 'anakSaya'])->name('kms.anak-saya');
+    Route::get('balita/{balita}/pertumbuhan', [GrafikPertumbuhanController::class, 'show'])->name('balita.pertumbuhan');
 });
 
 // Modul Kependudukan - Data Balita & Orang Tua (branch adhani)
