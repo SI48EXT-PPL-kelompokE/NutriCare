@@ -5,7 +5,7 @@
 @section('content')
     <!-- Breadcrumb -->
     <div class="flex items-center gap-2 text-xs font-medium text-slate-400 mb-6">
-        <a href="#" class="hover:text-slate-600">KMS Digital</a>
+        <a href="{{ route('kms.index') }}" class="hover:text-slate-600">KMS Digital</a>
         <span>/</span>
         <span class="text-slate-700 font-semibold">Pengukuran</span>
     </div>
@@ -60,6 +60,18 @@
                 <input type="date" name="end_date" value="{{ request('end_date') }}" 
                        placeholder="Sampai tanggal"
                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+            </div>
+            <div class="w-full lg:w-52">
+                <select name="status" aria-label="Filter status gizi"
+                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+                    <option value="">Semua status</option>
+                    @foreach(\App\Enums\StatusGizi::cases() as $status)
+                        <option value="{{ $status->value }}" @selected(request('status') === $status->value)>
+                            {{ $status->label() }}
+                        </option>
+                    @endforeach
+                    <option value="__null" @selected(request('status') === '__null')>Belum ada penilaian</option>
+                </select>
             </div>
 
             <!-- Tombol Filter & Tambah -->
@@ -130,14 +142,27 @@
                             @endif
                         </td>
                         <td class="px-4 py-3">
-                            <span class="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-600">
-                                <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
-                                Belum dihitung
-                            </span>
+                            @php($hasilItem = $item->hasil_status)
+                            <div class="flex items-center gap-1">
+                                <x-status-pill :status="$item->status_gizi" />
+                                @if(!$hasilItem['lengkap'])
+                                    <span title="Penilaian sebagian: indeks acuan belum tersedia"
+                                          class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-sky-100 text-sky-700 text-xs"
+                                          aria-label="Penilaian sebagian">i</span>
+                                @endif
+                            </div>
                         </td>
                         <td class="px-4 py-3 text-sm text-slate-700">{{ $item->petugas->name ?? '-' }}</td>
                         <td class="px-4 py-3 text-right">
                             <div class="flex items-center justify-end gap-2">
+                                <a href="{{ route('balita.pertumbuhan', $item->balita) }}"
+                                   class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-teal-700 hover:bg-teal-50 rounded transition-colors"
+                                   title="Lihat Grafik Pertumbuhan">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M22 12h-4l-3 9-6-18-3 9H2"/>
+                                    </svg>
+                                    Grafik
+                                </a>
                                 <a href="{{ route('kms.show', $item) }}"
                                    class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-teal-700 hover:bg-teal-50 rounded transition-colors"
                                    title="Lihat Detail">

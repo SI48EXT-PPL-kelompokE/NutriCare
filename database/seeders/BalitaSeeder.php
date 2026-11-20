@@ -39,6 +39,25 @@ class BalitaSeeder extends Seeder
             }
         }
 
+        // Pastikan sampel dashboard minimal tersedia untuk distribusi status gizi.
+        while ($balitaCount < 13) {
+            $orangTua = $orangTuas->first();
+            if (!$orangTua) {
+                break;
+            }
+
+            $umurBulan = rand(6, 59);
+            $birthDate = now()->subMonths($umurBulan)->subDays(rand(0, 28));
+            Balita::create([
+                'orang_tua_id' => $orangTua->id,
+                'name' => $faker->firstName,
+                'birth_date' => $birthDate,
+                'jenis_kelamin' => $faker->randomElement(['L', 'P']),
+                'qr_code' => 'NC-' . strtoupper(Str::random(10)),
+            ]);
+            $balitaCount++;
+        }
+
         $this->command->info("Balita berhasil di-seed: {$balitaCount} balita");
     }
 }

@@ -76,12 +76,52 @@
 
                     <div class="pt-2 border-t border-slate-100">
                         <span class="text-xs text-slate-500 uppercase tracking-wide">Status Gizi</span>
+                        @php($hasil = $kms->hasil_status)
                         <div class="mt-2">
-                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold rounded-full bg-slate-100 text-slate-600">
-                                <span class="w-2 h-2 rounded-full bg-slate-400"></span>
-                                Belum dihitung (KF-14/KF-15)
-                            </span>
+                            <x-status-pill :status="$kms->status_gizi" size="lg" />
                         </div>
+
+                        <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            @foreach([
+                                'bb_u' => ['label' => 'BB/U', 'z' => $kms->z_score_bbu],
+                                'tb_u' => ['label' => 'TB/U', 'z' => $kms->z_score_tbu],
+                                'bb_tb' => ['label' => 'BB/TB', 'z' => $kms->z_score_bbtb],
+                            ] as $key => $indeks)
+                                <div class="rounded-lg border border-slate-200 p-3">
+                                    <div class="text-xs font-bold text-slate-600">{{ $indeks['label'] }}</div>
+                                    <div class="mt-1 text-sm font-semibold text-slate-800">
+                                        {{ $hasil['kategori'][$key] ?? '-' }}
+                                    </div>
+                                    <div class="text-xs text-slate-500">
+                                        Z-score: {{ $indeks['z'] !== null ? number_format((float) $indeks['z'], 2, ',', '.') : '-' }}
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            @if($hasil['stunting'])
+                                <span class="px-2 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-semibold">Stunting</span>
+                            @endif
+                            @if($hasil['wasting'])
+                                <span class="px-2 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-semibold">Wasting</span>
+                            @endif
+                        </div>
+
+                        @if(!$hasil['lengkap'])
+                            @php($belum = collect($hasil['indeks_tersedia'])->filter(fn ($tersedia) => !$tersedia)->keys()->map(fn ($key) => ['bb_u' => 'BB/U', 'tb_u' => 'TB/U', 'bb_tb' => 'BB/TB'][$key])->join(', '))
+                            <div class="mt-3 rounded-lg border border-sky-200 bg-sky-50 p-3 text-xs text-sky-800">
+                                Penilaian sebagian: data acuan WHO untuk {{ $belum }} belum tersedia.
+                            </div>
+                        @endif
+                        @if($hasil['perlu_dicek'])
+                            <div class="mt-3 rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs font-semibold text-rose-800">
+                                Periksa kembali data pengukuran
+                            </div>
+                        @endif
+                        <p class="mt-3 text-xs text-slate-500">
+                            Status gizi ini adalah alat bantu pemantauan. Keputusan penanganan dan rujukan ditetapkan oleh tenaga kesehatan.
+                        </p>
                     </div>
 
                     <div class="pt-2 border-t border-slate-100">
@@ -93,7 +133,13 @@
                 </div>
 
                 <!-- Aksi -->
-                <div class="p-4 border-t border-slate-200 flex items-center gap-3">
+                <div class="p-4 border-t border-slate-200 flex flex-wrap items-center gap-3">
+                    <a href="{{ route('balita.pertumbuhan', $kms->balita) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white text-sm font-semibold rounded-lg hover:bg-teal-700 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M22 12h-4l-3 9-6-18-3 9H2"/>
+                        </svg>
+                        Lihat Grafik Pertumbuhan
+                    </a>
                     @can('access-module', ['kms', 'edit'])
                     <a href="{{ route('kms.edit', $kms) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -188,7 +234,7 @@
 
                 <div class="p-4 border-t border-slate-200 text-xs text-slate-500">
                     <strong>Catatan:</strong> Z-score dihitung otomatis menggunakan metode LMS WHO.
-                    Penentuan status gizi akan tersedia di fitur KF-15.
+                    Status gizi ditentukan otomatis dari z-score ini (KF-15).
                 </div>
             </div>
 
@@ -250,8 +296,8 @@
                 </x-data-table>
 
                 <div class="p-4 border-t border-slate-200 text-xs text-slate-500">
-                    <strong>Catatan:</strong> Δ (delta) menunjukkan selisih dari pengukuran sebelumnya. 
-                    Grafik pertumbuhan akan tersedia di fitur KF-16.
+                    <strong>Catatan:</strong> Δ (delta) menunjukkan selisih dari pengukuran sebelumnya.
+                    <a href="{{ route('balita.pertumbuhan', $kms->balita) }}" class="font-semibold text-teal-700 hover:underline">Lihat grafik pertumbuhan →</a>
                 </div>
             </x-table-card>
         </div>
