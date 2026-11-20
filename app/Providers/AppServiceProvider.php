@@ -51,6 +51,10 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('access-kms-anak-saya', fn (User $user): bool => $user->active_status
             && $user->role?->name_role === Role::RESIDENT);
 
+        // PBI 17: portal pengaduan dapat dibuka role yang punya izin lihat (petugas) atau kirim (warga).
+        Gate::define('access-pengaduan-portal', fn (User $user): bool => $user->can('access-module', ['pengaduan', 'view'])
+            || $user->can('access-module', ['pengaduan', 'create']));
+
         Gate::policy(JadwalPosyandu::class, JadwalPosyanduPolicy::class);
         Gate::policy(Balita::class, BalitaPolicy::class);
     }

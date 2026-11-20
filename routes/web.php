@@ -49,9 +49,18 @@ Route::prefix('edukasi')->name('edukasi.')->group(function () {
             ->middlewareFor(['edit', 'update'], "can:access-module,'artikel','edit'")
             ->middlewareFor('destroy', "can:access-module,'artikel','delete'");
 
-        Route::get('pengaduan/export', [PengaduanController::class, 'export'])->name('pengaduan.export');
-        Route::patch('pengaduan/{pengaduan}/tanggapi', [PengaduanController::class, 'tanggapi'])->name('pengaduan.tanggapi');
-        Route::resource('pengaduan', PengaduanController::class);
+        Route::get('pengaduan/export', [PengaduanController::class, 'export'])
+            ->middleware("can:access-module,'laporan','create'")->name('pengaduan.export');
+        Route::patch('pengaduan/{pengaduan}/tanggapi', [PengaduanController::class, 'tanggapi'])
+            ->middleware("can:access-module,'pengaduan','edit'")->name('pengaduan.tanggapi');
+        Route::get('pengaduan', [PengaduanController::class, 'index'])
+            ->middleware('can:access-pengaduan-portal')->name('pengaduan.index');
+        Route::get('pengaduan/create', [PengaduanController::class, 'create'])
+            ->middleware("can:access-module,'pengaduan','create'")->name('pengaduan.create');
+        Route::post('pengaduan', [PengaduanController::class, 'store'])
+            ->middleware("can:access-module,'pengaduan','create'")->name('pengaduan.store');
+        Route::get('pengaduan/{pengaduan}', [PengaduanController::class, 'show'])
+            ->middleware('can:access-pengaduan-portal')->name('pengaduan.show');
     });
 });
 

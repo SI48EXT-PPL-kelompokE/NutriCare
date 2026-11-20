@@ -87,6 +87,25 @@ class Pengaduan extends Model
         return $query->where('status', strtolower($status));
     }
 
+    /**
+     * Membatasi visibilitas daftar pengaduan bagi role warga (milik sendiri atau laporan anonim).
+     */
+    public function scopeVisibleTo($query, User $user)
+    {
+        if ($user->role?->name_role === Role::RESIDENT) {
+            $orangTuaId = $user->orangTua?->id;
+
+            return $query->where(function ($sub) use ($orangTuaId) {
+                $sub->where('is_anonymous', true);
+                if ($orangTuaId) {
+                    $sub->orWhere('orang_tua_id', $orangTuaId);
+                }
+            });
+        }
+
+        return $query;
+    }
+
     public function adminPenanggap()
     {
         return $this->belongsTo(User::class, 'user_id');

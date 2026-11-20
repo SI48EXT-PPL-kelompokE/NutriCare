@@ -71,17 +71,26 @@
 
             <!-- Baris 2: Orang Tua / Warga Terdaftar (sembunyikan jika anonim) -->
             <div x-show="!isAnon" x-transition>
-                <label for="orang_tua_id" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                    Warga / Orang Tua Terdaftar (Opsional)
-                </label>
-                <select name="orang_tua_id" id="orang_tua_id" class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#005953]">
-                    <option value="">-- Pilih jika warga terdata di sistem --</option>
-                    @foreach ($orangTuasList as $ot)
-                        <option value="{{ $ot->id }}" {{ old('orang_tua_id') == $ot->id ? 'selected' : '' }}>
-                            {{ $ot->name }} (NIK: {{ $ot->nik }}) - {{ $ot->alamat }}
-                        </option>
-                    @endforeach
-                </select>
+                @if ($isResident ?? false)
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                        Identitas Pelapor
+                    </label>
+                    <div class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 font-medium">
+                        {{ auth()->user()->name }} (Warga / Orang Tua Terdaftar)
+                    </div>
+                @else
+                    <label for="orang_tua_id" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                        Warga / Orang Tua Terdaftar (Opsional)
+                    </label>
+                    <select name="orang_tua_id" id="orang_tua_id" class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#005953]">
+                        <option value="">-- Pilih jika warga terdata di sistem --</option>
+                        @foreach ($orangTuasList as $ot)
+                            <option value="{{ $ot->id }}" {{ old('orang_tua_id') == $ot->id ? 'selected' : '' }}>
+                                {{ $ot->name }} (NIK: {{ $ot->nik }}) - {{ $ot->alamat }}
+                            </option>
+                        @endforeach
+                    </select>
+                @endif
             </div>
 
             <!-- Baris 3: Judul Pengaduan -->

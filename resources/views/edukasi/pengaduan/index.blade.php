@@ -20,6 +20,7 @@
         </div>
 
         <div class="flex items-center gap-3">
+            @can('access-module', ['pengaduan', 'create'])
             <a href="{{ route('edukasi.pengaduan.create') }}" 
                id="btnCatatPengaduan"
                class="inline-flex items-center gap-2 px-4 py-2.5 bg-[#005953] hover:bg-[#004742] text-white text-xs font-semibold rounded-xl shadow-xs transition-colors">
@@ -27,8 +28,9 @@
                     <line x1="12" y1="5" x2="12" y2="19"></line>
                     <line x1="5" y1="12" x2="19" y2="12"></line>
                 </svg>
-                <span>Catat Pengaduan</span>
+                <span>{{ ($isResident ?? false) ? 'Buat Pengaduan' : 'Catat Pengaduan' }}</span>
             </a>
+            @endcan
         </div>
     </div>
 
@@ -114,13 +116,15 @@
             @endif
         </form>
 
-        <!-- Tombol Ekspor Rekap (Mockup Proposal) -->
+        {{-- Tombol Ekspor Rekap (Mockup Proposal) --}}
+        @can('access-module', ['laporan', 'create'])
         <a href="{{ route('edukasi.pengaduan.export', request()->query()) }}" id="btnEksporRekap" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl shadow-2xs transition-colors shrink-0">
             <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
             </svg>
             <span>Ekspor Rekap</span>
         </a>
+        @endcan
     </div>
 
     <!-- Tabel Data Pengaduan Warga (6 Kolom Sesuai Mockup Gambar 15) -->
@@ -199,15 +203,15 @@
                             <!-- Kolom 6: Aksi -->
                             <td class="px-6 py-4 whitespace-nowrap text-right text-xs">
                                 <div class="inline-flex items-center justify-end gap-3">
-                                    @if ($item->status === 'selesai')
-                                        <a href="{{ route('edukasi.pengaduan.show', $item->id) }}" 
-                                           class="text-[#005953] hover:text-[#004742] font-semibold transition-colors">
-                                            Lihat Detail
-                                        </a>
-                                    @else
+                                    @if ($item->status !== 'selesai' && auth()->user()?->can('access-module', ['pengaduan', 'edit']))
                                         <a href="{{ route('edukasi.pengaduan.show', $item->id) }}" 
                                            class="text-[#005953] hover:text-[#004742] font-bold transition-colors">
                                             Tanggapi
+                                        </a>
+                                    @else
+                                        <a href="{{ route('edukasi.pengaduan.show', $item->id) }}" 
+                                           class="text-[#005953] hover:text-[#004742] font-semibold transition-colors">
+                                            Lihat Detail
                                         </a>
                                     @endif
                                 </div>

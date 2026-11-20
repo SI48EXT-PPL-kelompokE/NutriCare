@@ -76,6 +76,7 @@
                 @endif
             </div>
 
+            @can('access-module', ['pengaduan', 'edit'])
             <!-- Form Tanggapi Petugas / Puskesmas -->
             <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs space-y-4">
                 <h4 class="text-sm font-bold text-slate-900 tracking-tight">Tindak Lanjut & Tanggapan Petugas</h4>
@@ -109,6 +110,16 @@
                     </div>
                 </form>
             </div>
+            @else
+            <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs space-y-3">
+                <h4 class="text-sm font-bold text-slate-900 tracking-tight">Tanggapan & Tindak Lanjut Petugas</h4>
+                @if ($pengaduan->catatan)
+                    <p class="text-xs text-slate-700 leading-relaxed whitespace-pre-line">{{ $pengaduan->catatan }}</p>
+                @else
+                    <p class="text-xs text-slate-400 italic">Belum ada tanggapan petugas. Laporan Anda sedang menunggu pemeriksaan.</p>
+                @endif
+            </div>
+            @endcan
         </div>
 
         <!-- Kolom Kanan (1 Kolom): Profil Pelapor & Info Log -->

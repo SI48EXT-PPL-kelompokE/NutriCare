@@ -5,22 +5,27 @@ namespace App\Http\Controllers;
 use App\Models\Artikel;
 use App\Models\OrangTua;
 use App\Models\Pengaduan;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class PengaduanController extends Controller
 {
+    private const KATEGORI_LIST = [
+        'Distribusi PMT',
+        'Layanan Posyandu',
+        'Data KMS',
+        'Antrean Posyandu',
+    ];
+
     public function index(Request $request)
     {
-        $kategoriList = [
-            'Distribusi PMT',
-            'Layanan Posyandu',
-            'Data KMS',
-            'Antrean Posyandu',
-        ];
+        $user = $request->user();
+        $isResident = $user->role?->name_role === Role::RESIDENT;
 
         $pengaduans = Pengaduan::with(['orangTua', 'adminPenanggap'])
+            ->visibleTo($user)
             ->search($request->query('q'))
             ->kategori($request->query('kategori'))
             ->status($request->query('status'))
@@ -28,24 +33,28 @@ class PengaduanController extends Controller
             ->paginate(5)
             ->withQueryString();
 
-        $totalArtikel = Artikel::count();
-        $totalPengaduan = Pengaduan::count();
+        $totalArtikel = Artikel::query()->when($isResident, fn ($q) => $q->published())->count();
+        $totalPengaduan = Pengaduan::visibleTo($user)->count();
+        $kategoriList = self::KATEGORI_LIST;
 
-        return view('edukasi.pengaduan.index', compact('pengaduans', 'kategoriList', 'totalArtikel', 'totalPengaduan'));
+        return view('edukasi.pengaduan.index', compact(
+            'pengaduans',
+            'kategoriList',
+            'totalArtikel',
+            'totalPengaduan',
+            'isResident'
+        ));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        $kategoriList = [
-            'Distribusi PMT',
-            'Layanan Posyandu',
-            'Data KMS',
-            'Antrean Posyandu',
-        ];
+        $isResident = $request->user()->role?->name_role === Role::RESIDENT;
+        $kategoriList = self::KATEGORI_LIST;
+        $orangTuasList = $isResident
+            ? collect()
+            : OrangTua::select('id', 'name', 'nik', 'alamat')->orderBy('name')->get();
 
-        $orangTuasList = OrangTua::select('id', 'name', 'nik', 'alamat')->orderBy('name')->get();
-
-        return view('edukasi.pengaduan.create', compact('kategoriList', 'orangTuasList'));
+        return view('edukasi.pengaduan.create', compact('kategoriList', 'orangTuasList', 'isResident'));
     }
 
     public function store(Request $request)
@@ -64,13 +73,18 @@ class PengaduanController extends Controller
             $fotoPath = $request->file('foto_bukti')->store('pengaduan', 'public');
         }
 
+        $user = $request->user();
+        $isResident = $user->role?->name_role === Role::RESIDENT;
         $isAnonymous = $request->boolean('is_anonymous');
+        $orangTuaId = $isAnonymous
+            ? null
+            : ($isResident ? $user->orangTua?->id : ($validated['orang_tua_id'] ?? null));
 
         Pengaduan::create([
             'kategori' => $validated['kategori'],
             'judul' => $validated['judul'],
             'isi' => $validated['isi'],
-            'orang_tua_id' => $isAnonymous ? null : ($validated['orang_tua_id'] ?? null),
+            'orang_tua_id' => $orangTuaId,
             'is_anonymous' => $isAnonymous,
             'foto_bukti_path' => $fotoPath,
             'status' => 'baru',
@@ -81,11 +95,18 @@ class PengaduanController extends Controller
             ->with('success', 'Pengaduan warga berhasil dicatat.');
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
         $pengaduan = Pengaduan::with(['orangTua', 'adminPenanggap'])->findOrFail($id);
+        $user = $request->user();
+        $isResident = $user->role?->name_role === Role::RESIDENT;
 
-        return view('edukasi.pengaduan.show', compact('pengaduan'));
+        abort_if(
+            $isResident && !$pengaduan->is_anonymous && $pengaduan->orang_tua_id !== $user->orangTua?->id,
+            403
+        );
+
+        return view('edukasi.pengaduan.show', compact('pengaduan', 'isResident'));
     }
 
     public function tanggapi(Request $request, $id)
