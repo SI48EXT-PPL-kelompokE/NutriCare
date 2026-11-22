@@ -32,7 +32,7 @@ class PermissionSeeder extends Seeder
             'imunisasi' => ['Nakes / Bidan' => [1,1,1,0], 'Kader Posyandu' => [1,1,0,0]],
             'vitamin' => ['Nakes / Bidan' => [1,1,1,0], 'Kader Posyandu' => [1,1,0,0]],
             'konseling' => ['Nakes / Bidan' => [1,0,1,0], 'Warga / Orang Tua' => [0,1,0,0]],
-            'rujukan' => ['Nakes / Bidan' => [1,1,1,0]],
+            'rujukan' => ['Nakes / Bidan' => [1,1,1,1]],
             
             // Kader Posyandu
             'distribusi_pmt' => ['Kader Posyandu' => [1,1,1,0]],
