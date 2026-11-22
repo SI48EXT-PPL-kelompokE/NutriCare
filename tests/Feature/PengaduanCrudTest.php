@@ -189,4 +189,109 @@ class PengaduanCrudTest extends TestCase
         $response->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
         $this->assertStringContainsString('attachment; filename=laporan_pengaduan_warga_', (string) $response->headers->get('Content-Disposition'));
     }
+
+    /**
+     * SCRUM-183 [KF-50]: Memastikan warga dapat mengubah pengaduan berstatus baru dan halaman detail menampilkan timeline status.
+     */
+    public function test_resident_can_edit_baru_complaint_and_cannot_edit_processed_complaint(): void
+    {
+        $resident = $this->residentUser();
+        $orangTua = OrangTua::create([
+            'user_id' => $resident->id,
+            'nik' => '3201010101990002',
+            'name' => $resident->name,
+            'alamat' => 'Posyandu Anggrek',
+            'kontak' => '081234567891',
+            'pregnancy_status' => 'tidak_hamil',
+        ]);
+
+        $pengaduanBaru = Pengaduan::create([
+            'orang_tua_id' => $orangTua->id,
+            'kategori' => 'Antrean Posyandu',
+            'judul' => 'Antrean Terlalu Lama',
+            'isi' => 'Mohon penambahan kursi tunggu.',
+            'is_anonymous' => false,
+            'status' => 'baru',
+        ]);
+
+        $this->actingAs($resident)
+            ->get(route('edukasi.pengaduan.show', $pengaduanBaru->id))
+            ->assertOk()
+            ->assertSee('Timeline Status Penanganan')
+            ->assertSee('Baru (Diajukan)')
+            ->assertSee('Diproses Petugas')
+            ->assertSee('Edit Pengaduan');
+
+        $this->actingAs($resident)
+            ->get(route('edukasi.pengaduan.edit', $pengaduanBaru->id))
+            ->assertOk()
+            ->assertSee('Ubah Pengaduan #' . $pengaduanBaru->nomor_tiket);
+
+        $this->actingAs($resident)
+            ->put(route('edukasi.pengaduan.update', $pengaduanBaru->id), [
+                'kategori' => 'Layanan Posyandu',
+                'judul' => 'Antrean Posyandu Kurang Kursi',
+                'isi' => 'Mohon tambah kursi tunggu di meja pendaftaran.',
+                'is_anonymous' => 0,
+            ])
+            ->assertRedirect(route('edukasi.pengaduan.index'));
+
+        $this->assertDatabaseHas('pengaduan', [
+            'id' => $pengaduanBaru->id,
+            'kategori' => 'Layanan Posyandu',
+            'judul' => 'Antrean Posyandu Kurang Kursi',
+        ]);
+
+        $pengaduanDiproses = Pengaduan::create([
+            'orang_tua_id' => $orangTua->id,
+            'kategori' => 'Data KMS',
+            'judul' => 'Sudah Diproses',
+            'isi' => 'Sudah ditindaklanjuti petugas.',
+            'status' => 'diproses',
+        ]);
+
+        $this->actingAs($resident)
+            ->get(route('edukasi.pengaduan.edit', $pengaduanDiproses->id))
+            ->assertForbidden();
+        $this->actingAs($resident)
+            ->put(route('edukasi.pengaduan.update', $pengaduanDiproses->id), [
+                'kategori' => 'Data KMS',
+                'judul' => 'Coba Ubah',
+                'isi' => 'Tidak boleh diubah.',
+            ])
+            ->assertForbidden();
+    }
+
+    /**
+     * SCRUM-183 [KF-50]: Memastikan admin dapat menghapus pengaduan beserta foto bukti, sementara warga ditolak.
+     */
+    public function test_admin_can_delete_complaint_and_resident_is_forbidden(): void
+    {
+        Storage::fake('public');
+
+        $resident = $this->residentUser();
+        $admin = $this->adminUser();
+        $photoPath = UploadedFile::fake()->image('bukti_hapus.jpg')->store('pengaduan', 'public');
+
+        $pengaduan = Pengaduan::create([
+            'kategori' => 'Distribusi PMT',
+            'judul' => 'Aduan Uji Hapus',
+            'isi' => 'Data uji coba hapus pengaduan.',
+            'is_anonymous' => true,
+            'foto_bukti_path' => $photoPath,
+            'status' => 'baru',
+        ]);
+
+        $this->actingAs($resident)
+            ->delete(route('edukasi.pengaduan.destroy', $pengaduan->id))
+            ->assertForbidden();
+        $this->assertDatabaseHas('pengaduan', ['id' => $pengaduan->id]);
+
+        $this->actingAs($admin)
+            ->delete(route('edukasi.pengaduan.destroy', $pengaduan->id))
+            ->assertRedirect(route('edukasi.pengaduan.index'));
+
+        $this->assertDatabaseMissing('pengaduan', ['id' => $pengaduan->id]);
+        Storage::disk('public')->assertMissing($photoPath);
+    }
 }

@@ -92,12 +92,48 @@ class PengaduanManagementTest extends DuskTestCase
             $this->browse(function (Browser $browser) use ($admin, $pengaduan) {
                 $browser->loginAs($admin)->visit('/edukasi/pengaduan/' . $pengaduan->id)
                     ->assertSee($pengaduan->judul)
+                    ->assertSee('TIMELINE STATUS PENANGANAN')
                     ->assertSee('Tindak Lanjut & Tanggapan Petugas')
                     ->select('#status', 'selesai')
                     ->type('#catatan', 'Keluhan sudah ditindaklanjuti dan diselesaikan oleh petugas.')
                     ->press('Simpan Tanggapan')
                     ->assertPathIs('/edukasi/pengaduan')
                     ->assertSee($pengaduan->nomor_tiket);
+            });
+        } finally {
+            $pengaduan->delete();
+        }
+    }
+
+    /**
+     * SCRUM-185 [KF-50]: Menguji warga membuka halaman edit pengaduan berstatus baru dan menyimpan perubahan.
+     */
+    public function test_resident_can_edit_newly_created_complaint_via_browser(): void
+    {
+        $resident = $this->activeUserForRole('Warga / Orang Tua');
+        $isiAwal = 'Uraian awal edit Dusk ' . uniqid();
+        $isiBaru = 'Uraian sesudah diubah Dusk ' . uniqid();
+
+        $pengaduan = Pengaduan::create([
+            'orang_tua_id' => $resident->orangTua?->id,
+            'kategori' => 'Layanan Posyandu',
+            'judul' => 'Judul Awal Edit Dusk',
+            'isi' => $isiAwal,
+            'is_anonymous' => false,
+            'status' => 'baru',
+        ]);
+
+        try {
+            $this->browse(function (Browser $browser) use ($resident, $pengaduan, $isiBaru) {
+                $browser->loginAs($resident)->visit('/edukasi/pengaduan/' . $pengaduan->id)
+                    ->assertSee('TIMELINE STATUS PENANGANAN')
+                    ->assertSee('Edit Pengaduan')
+                    ->clickLink('Edit Pengaduan')
+                    ->assertPathIs('/edukasi/pengaduan/' . $pengaduan->id . '/edit')
+                    ->type('#isi', $isiBaru)
+                    ->press('Simpan Perubahan')
+                    ->assertPathIs('/edukasi/pengaduan')
+                    ->assertSee($isiBaru);
             });
         } finally {
             $pengaduan->delete();

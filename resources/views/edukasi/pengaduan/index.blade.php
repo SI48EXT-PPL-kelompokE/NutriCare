@@ -203,6 +203,13 @@
                             <!-- Kolom 6: Aksi -->
                             <td class="px-6 py-4 whitespace-nowrap text-right text-xs">
                                 <div class="inline-flex items-center justify-end gap-3">
+                                    @if ($item->status === 'baru' && auth()->user()?->can('access-module', ['pengaduan', 'create']))
+                                        <a href="{{ route('edukasi.pengaduan.edit', $item->id) }}" 
+                                           class="text-amber-600 hover:text-amber-700 font-semibold transition-colors">
+                                            Edit
+                                        </a>
+                                    @endif
+
                                     @if ($item->status !== 'selesai' && auth()->user()?->can('access-module', ['pengaduan', 'edit']))
                                         <a href="{{ route('edukasi.pengaduan.show', $item->id) }}" 
                                            class="text-[#005953] hover:text-[#004742] font-bold transition-colors">
@@ -214,6 +221,16 @@
                                             Lihat Detail
                                         </a>
                                     @endif
+
+                                    @can('delete-pengaduan')
+                                        <form action="{{ route('edukasi.pengaduan.destroy', $item->id) }}" method="POST" class="inline" onsubmit="return confirm('Hapus pengaduan #{{ $item->nomor_tiket }}?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="text-rose-600 hover:text-rose-700 font-semibold transition-colors cursor-pointer">
+                                                Hapus
+                                            </button>
+                                        </form>
+                                    @endcan
                                 </div>
                             </td>
                         </tr>

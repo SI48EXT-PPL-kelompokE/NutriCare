@@ -59,6 +59,12 @@ Route::prefix('edukasi')->name('edukasi.')->group(function () {
             ->middleware("can:access-module,'pengaduan','create'")->name('pengaduan.create');
         Route::post('pengaduan', [PengaduanController::class, 'store'])
             ->middleware("can:access-module,'pengaduan','create'")->name('pengaduan.store');
+        Route::get('pengaduan/{pengaduan}/edit', [PengaduanController::class, 'edit'])
+            ->middleware("can:access-module,'pengaduan','create'")->name('pengaduan.edit');
+        Route::put('pengaduan/{pengaduan}', [PengaduanController::class, 'update'])
+            ->middleware("can:access-module,'pengaduan','create'")->name('pengaduan.update');
+        Route::delete('pengaduan/{pengaduan}', [PengaduanController::class, 'destroy'])
+            ->middleware('can:delete-pengaduan')->name('pengaduan.destroy');
         Route::get('pengaduan/{pengaduan}', [PengaduanController::class, 'show'])
             ->middleware('can:access-pengaduan-portal')->name('pengaduan.show');
     });
