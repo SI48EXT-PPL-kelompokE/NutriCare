@@ -7,7 +7,7 @@
         ['label' => 'Data Balita', 'icon' => 'balita', 'route' => 'kependudukan.balita.index', 'permission' => ['balita', 'view'], 'active' => ['kependudukan.*']],
         ['label' => 'KMS Digital', 'icon' => 'kms', 'route' => 'kms.index', 'permission' => ['kms', 'view'], 'ability' => 'view-clinical-records', 'active' => ['kms.*', 'imunisasi.*']],
         ['label' => 'Logistik PMT', 'icon' => 'package', 'route' => 'pmt.paket.index', 'permission' => ['paket_pmt', 'view'], 'active' => ['pmt.*']],
-        ['label' => 'Jadwal & Rujukan', 'icon' => 'calendar'],
+        ['label' => 'Jadwal & Rujukan', 'icon' => 'calendar', 'route' => 'jadwal.index', 'active' => ['jadwal.*', 'presensi.*', 'reservasi.*', 'rujukan.*']],
         ['label' => 'Konseling Gizi', 'icon' => 'chat', 'route' => 'konseling.index', 'permission' => ['konseling', 'view'], 'active' => ['konseling.*']],
         ['label' => 'Ajukan Konseling Gizi', 'icon' => 'chat', 'route' => 'konseling.create', 'permission' => ['konseling', 'create'], 'active' => ['konseling.create']],
         ['label' => 'Artikel & Pengaduan', 'icon' => 'article', 'route' => 'edukasi.artikel.index', 'permission' => ['artikel', 'view'], 'active' => ['edukasi.*']],
