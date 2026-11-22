@@ -5,9 +5,15 @@ namespace App\Providers;
 use App\Contracts\Paket4\NakesLookup;
 use App\Adapters\Paket4\EloquentNakesLookup;
 use App\Models\JadwalPosyandu;
+use App\Models\Presensi;
+use App\Models\Reservasi;
 use App\Models\Role;
+use App\Models\SuratRujukan;
 use App\Models\User;
 use App\Policies\JadwalPosyanduPolicy;
+use App\Policies\PresensiPolicy;
+use App\Policies\ReservasiPolicy;
+use App\Policies\SuratRujukanPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -42,5 +48,8 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Gate::policy(JadwalPosyandu::class, JadwalPosyanduPolicy::class);
+        Gate::policy(Presensi::class, PresensiPolicy::class);
+        Gate::policy(Reservasi::class, ReservasiPolicy::class);
+        Gate::policy(SuratRujukan::class, SuratRujukanPolicy::class);
     }
 }
