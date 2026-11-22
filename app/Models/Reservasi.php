@@ -40,4 +40,25 @@ class Reservasi extends Model
     {
         return $this->belongsTo(Balita::class, 'balita_id');
     }
+
+    /**
+     * Tentukan apakah reservasi dapat di-reschedule.
+     * Syarat: status belum selesai/batal dan waktu saat ini belum melewati batas_reschedule.
+     */
+    public function canReschedule(): bool
+    {
+        if (in_array($this->status, ['dibatalkan', 'selesai'], true)) {
+            return false;
+        }
+
+        return $this->batas_reschedule !== null && now()->lt($this->batas_reschedule);
+    }
+
+    /**
+     * Tentukan apakah reservasi aktif (memakai slot kuota).
+     */
+    public function isActive(): bool
+    {
+        return $this->status !== 'dibatalkan';
+    }
 }
