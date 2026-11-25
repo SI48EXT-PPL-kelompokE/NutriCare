@@ -13,6 +13,7 @@ use App\Http\Controllers\SesiKonselingController;
 use App\Http\Controllers\Settings\AccountController;
 use App\Http\Controllers\Settings\PermissionMatrixController;
 use App\Http\Controllers\Settings\RoleController;
+use App\Http\Controllers\StokGudangController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [SessionController::class, 'landing'])->name('home');
@@ -84,7 +85,7 @@ Route::middleware('auth:web')->group(function () {
         ->middlewareFor('destroy', "can:access-module,'konseling','delete'");
 });
 
-// Modul Logistik PMT - PBI 8: Master Paket PMT
+// Modul Logistik PMT - PBI 8 (Master Paket PMT) & PBI 9 (CRUD Stok Gudang)
 Route::prefix('pmt')->name('pmt.')->middleware('auth:web')->group(function () {
     Route::post('paket/calculate-preview', [PaketPmtController::class, 'calculatePreview'])
         ->middleware("can:access-module,'paket_pmt','view'")->name('paket.calculate-preview');
@@ -95,6 +96,20 @@ Route::prefix('pmt')->name('pmt.')->middleware('auth:web')->group(function () {
         ->middlewareFor(['create', 'store'], "can:access-module,'paket_pmt','create'")
         ->middlewareFor(['edit', 'update'], "can:access-module,'paket_pmt','edit'")
         ->middlewareFor('destroy', "can:access-module,'paket_pmt','delete'");
+
+    // PBI 9: Stok Gudang (KF-27, KF-28, KF-29, KF-30, KF-31)
+    Route::post('stok/keluarkan-fefo', [StokGudangController::class, 'keluarkanFefo'])
+        ->middleware("can:access-module,'stok_gudang','edit'")->name('stok.keluarkan-fefo');
+    Route::post('stok/preview-fefo', [StokGudangController::class, 'previewFefo'])
+        ->middleware("can:access-module,'stok_gudang','view'")->name('stok.preview-fefo');
+    Route::get('stok/scan-batch', [StokGudangController::class, 'scanBatch'])
+        ->middleware("can:access-module,'stok_gudang','view'")->name('stok.scan-batch');
+    Route::resource('stok', StokGudangController::class)->except(['create', 'show', 'edit'])
+        ->parameters(['stok' => 'stok'])
+        ->middlewareFor('index', "can:access-module,'stok_gudang','view'")
+        ->middlewareFor('store', "can:access-module,'stok_gudang','create'")
+        ->middlewareFor('update', "can:access-module,'stok_gudang','edit'")
+        ->middlewareFor('destroy', "can:access-module,'stok_gudang','delete'");
 });
 
 Route::middleware('auth:web')->group(function () {
