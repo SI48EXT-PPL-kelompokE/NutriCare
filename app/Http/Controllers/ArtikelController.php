@@ -36,7 +36,9 @@ class ArtikelController extends Controller
             ->withQueryString();
 
         $totalArtikel = Artikel::query()->when($isResident, fn ($query) => $query->published())->count();
-        $totalPengaduan = $isResident ? 0 : Pengaduan::count();
+        $totalPengaduan = $request->user()->can('access-pengaduan-portal')
+            ? Pengaduan::visibleTo($request->user())->count()
+            : 0;
 
         return view('edukasi.artikel.index', compact('artikels', 'kategoriList', 'totalArtikel', 'totalPengaduan', 'isResident'));
     }

@@ -21,13 +21,71 @@
             </p>
         </div>
 
-        <a href="{{ route('edukasi.pengaduan.index') }}" 
-           class="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors shadow-2xs">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-            </svg>
-            <span>Kembali ke Daftar</span>
-        </a>
+        <div class="flex items-center gap-2">
+            @if ($pengaduan->status === 'baru' && auth()->user()?->can('access-module', ['pengaduan', 'create']))
+                <a href="{{ route('edukasi.pengaduan.edit', $pengaduan->id) }}" 
+                   class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-xl hover:bg-amber-100 transition-colors">
+                    <span>Edit Pengaduan</span>
+                </a>
+            @endif
+            @can('delete-pengaduan')
+                <form action="{{ route('edukasi.pengaduan.destroy', $pengaduan->id) }}" method="POST" class="inline" onsubmit="return confirm('Hapus pengaduan #{{ $pengaduan->nomor_tiket }}?');">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-200 rounded-xl hover:bg-rose-100 transition-colors cursor-pointer">
+                        <span>Hapus</span>
+                    </button>
+                </form>
+            @endcan
+            <a href="{{ route('edukasi.pengaduan.index') }}" 
+               class="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors shadow-2xs">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                <span>Kembali ke Daftar</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Timeline Status Penanganan (KF-50) -->
+    @php
+        $stepIndex = match ($pengaduan->status) {
+            'diproses' => 2,
+            'selesai' => 3,
+            default => 1,
+        };
+    @endphp
+    <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs">
+        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Timeline Status Penanganan</h4>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="flex items-start gap-3 p-3 rounded-xl border {{ $stepIndex >= 1 ? 'bg-teal-50/70 border-teal-200' : 'bg-slate-50 border-slate-200' }}">
+                <span class="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 {{ $stepIndex >= 1 ? 'bg-[#005953] text-white' : 'bg-slate-200 text-slate-500' }}">1</span>
+                <div class="text-xs">
+                    <span class="font-bold text-slate-800 block">Baru (Diajukan)</span>
+                    <span class="text-[11px] text-slate-500 block mt-0.5">{{ $pengaduan->created_at->format('d M Y, H:i') }} WIB</span>
+                </div>
+            </div>
+
+            <div class="flex items-start gap-3 p-3 rounded-xl border {{ $stepIndex >= 2 ? 'bg-teal-50/70 border-teal-200' : 'bg-slate-50 border-slate-200' }}">
+                <span class="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 {{ $stepIndex >= 2 ? 'bg-[#005953] text-white' : 'bg-slate-200 text-slate-500' }}">2</span>
+                <div class="text-xs">
+                    <span class="font-bold {{ $stepIndex >= 2 ? 'text-slate-800' : 'text-slate-400' }} block">Diproses Petugas</span>
+                    <span class="text-[11px] text-slate-500 block mt-0.5">
+                        {{ $stepIndex >= 2 ? ($pengaduan->adminPenanggap?->name ?? 'Sedang ditindaklanjuti') : 'Menunggu tindak lanjut' }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="flex items-start gap-3 p-3 rounded-xl border {{ $stepIndex >= 3 ? 'bg-teal-50/70 border-teal-200' : 'bg-slate-50 border-slate-200' }}">
+                <span class="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 {{ $stepIndex >= 3 ? 'bg-[#005953] text-white' : 'bg-slate-200 text-slate-500' }}">3</span>
+                <div class="text-xs">
+                    <span class="font-bold {{ $stepIndex >= 3 ? 'text-slate-800' : 'text-slate-400' }} block">Selesai</span>
+                    <span class="text-[11px] text-slate-500 block mt-0.5">
+                        {{ $stepIndex >= 3 ? $pengaduan->updated_at->format('d M Y, H:i') . ' WIB' : 'Belum selesai' }}
+                    </span>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -76,6 +134,7 @@
                 @endif
             </div>
 
+            @can('access-module', ['pengaduan', 'edit'])
             <!-- Form Tanggapi Petugas / Puskesmas -->
             <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs space-y-4">
                 <h4 class="text-sm font-bold text-slate-900 tracking-tight">Tindak Lanjut & Tanggapan Petugas</h4>
@@ -109,6 +168,16 @@
                     </div>
                 </form>
             </div>
+            @else
+            <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs space-y-3">
+                <h4 class="text-sm font-bold text-slate-900 tracking-tight">Tanggapan & Tindak Lanjut Petugas</h4>
+                @if ($pengaduan->catatan)
+                    <p class="text-xs text-slate-700 leading-relaxed whitespace-pre-line">{{ $pengaduan->catatan }}</p>
+                @else
+                    <p class="text-xs text-slate-400 italic">Belum ada tanggapan petugas. Laporan Anda sedang menunggu pemeriksaan.</p>
+                @endif
+            </div>
+            @endcan
         </div>
 
         <!-- Kolom Kanan (1 Kolom): Profil Pelapor & Info Log -->

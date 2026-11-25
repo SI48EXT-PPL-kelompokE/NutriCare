@@ -24,6 +24,7 @@ class SesiKonselingManagementTest extends DuskTestCase
                 ->type('#searchKonselingInput', 'MPASI')
                 ->select('#filterStatus', 'diajukan')
                 ->press('#btnFilterKonseling')
+                ->waitUntil('window.location.search.includes("q=MPASI") && window.location.search.includes("status=diajukan")', 5)
                 ->assertQueryStringHas('q', 'MPASI')
                 ->assertQueryStringHas('status', 'diajukan');
         });
@@ -72,7 +73,7 @@ class SesiKonselingManagementTest extends DuskTestCase
             $browser->loginAs($nakes)->visit('/konseling/'.$sesi->id)
                 ->assertSee('Detail Sesi #'.$sesi->id)
                 ->assertSee('Stimulasi Tumbuh Kembang')
-                ->assertSee('Alur Perkembangan Sesi & Notifikasi')
+                ->assertSee('ALUR PERKEMBANGAN SESI & NOTIFIKASI')
                 ->assertPresent('#user_id')
                 ->assertPresent('#jadwal')
                 ->assertPresent('#availabilityNotice')

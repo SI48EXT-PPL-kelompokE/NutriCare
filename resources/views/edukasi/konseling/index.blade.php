@@ -31,15 +31,6 @@
         </div>
     </div>
 
-    @if (session('success'))
-        <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-3 text-xs text-emerald-800">
-            <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-            <span class="font-medium">{{ session('success') }}</span>
-        </div>
-    @endif
-
     <!-- Kartu statistik status konseling -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">

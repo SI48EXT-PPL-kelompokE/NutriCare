@@ -9,9 +9,9 @@ use Tests\DuskTestCase;
 class PengaduanManagementTest extends DuskTestCase
 {
     /**
-     * SCRUM-185 [KF-50]: Menguji navigasi halaman daftar pengaduan warga serta filter pencarian.
+     * SCRUM-185 [KF-50]: Menguji admin melihat daftar pengaduan, filter pencarian, dan tanpa tombol buat pengaduan.
      */
-    public function test_user_can_view_pengaduan_index_and_use_search_filter(): void
+    public function test_admin_can_view_pengaduan_index_and_use_search_filter(): void
     {
         $admin = $this->activeUserForRole('Admin / Kepala Puskesmas');
 
@@ -19,7 +19,7 @@ class PengaduanManagementTest extends DuskTestCase
             $browser->loginAs($admin)->visit('/edukasi/pengaduan')
                 ->assertSee('Edukasi & Layanan Warga')
                 ->assertSee('Pengaduan Warga')
-                ->assertPresent('#btnCatatPengaduan')
+                ->assertMissing('#btnCatatPengaduan')
                 ->assertPresent('#searchPengaduanInput')
                 ->assertPresent('#filterKategoriPengaduan')
                 ->assertPresent('#filterStatusPengaduan')
@@ -31,13 +31,12 @@ class PengaduanManagementTest extends DuskTestCase
     }
 
     /**
-     * SCRUM-188 [KF-51] & SCRUM-191 [KF-52]: Menguji form catat pengaduan anonim beserta upload foto bukti di browser.
+     * SCRUM-188 [KF-51] & SCRUM-191 [KF-52]: Menguji warga membuka tab Pengaduan Warga dan mengirim pengaduan anonim + foto bukti.
      */
-    public function test_user_can_submit_anonymous_complaint_with_photo_via_browser(): void
+    public function test_resident_can_submit_anonymous_complaint_with_photo_via_browser(): void
     {
-        $admin = $this->activeUserForRole('Admin / Kepala Puskesmas');
+        $resident = $this->activeUserForRole('Warga / Orang Tua');
         $tmpPng = tempnam(sys_get_temp_dir(), 'dusk_bukti_') . '.png';
-        // Minimal valid 1x1 PNG binary
         file_put_contents($tmpPng, base64_decode(
             'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII='
         ));
@@ -46,8 +45,16 @@ class PengaduanManagementTest extends DuskTestCase
         $isi = 'Simulasi pengiriman pengaduan anonim dengan foto bukti melalui Laravel Dusk ' . uniqid() . '.';
 
         try {
-            $this->browse(function (Browser $browser) use ($admin, $tmpPng, $judul, $isi) {
-                $browser->loginAs($admin)->visit('/edukasi/pengaduan/create')
+            $this->browse(function (Browser $browser) use ($resident, $tmpPng, $judul, $isi) {
+                $browser->loginAs($resident)->visit('/edukasi/artikel')
+                    ->assertSee('Pengaduan Warga')
+                    ->clickLink('Pengaduan Warga')
+                    ->assertPathIs('/edukasi/pengaduan')
+                    ->assertPresent('#btnCatatPengaduan')
+                    ->assertSee('Buat Pengaduan')
+                    ->assertMissing('#btnEksporRekap')
+                    ->click('#btnCatatPengaduan')
+                    ->assertPathIs('/edukasi/pengaduan/create')
                     ->assertSee('Catat Pengaduan Warga Baru')
                     ->select('#kategori', 'Distribusi PMT')
                     ->check('input[name="is_anonymous"]')
@@ -68,7 +75,7 @@ class PengaduanManagementTest extends DuskTestCase
     }
 
     /**
-     * SCRUM-185 [KF-50]: Menguji halaman detail pengaduan dan penyimpanan tanggapan petugas.
+     * SCRUM-185 [KF-50]: Menguji admin membuka detail pengaduan dan menyimpan tanggapan petugas.
      */
     public function test_admin_can_open_detail_and_submit_response(): void
     {
@@ -85,12 +92,48 @@ class PengaduanManagementTest extends DuskTestCase
             $this->browse(function (Browser $browser) use ($admin, $pengaduan) {
                 $browser->loginAs($admin)->visit('/edukasi/pengaduan/' . $pengaduan->id)
                     ->assertSee($pengaduan->judul)
+                    ->assertSee('TIMELINE STATUS PENANGANAN')
                     ->assertSee('Tindak Lanjut & Tanggapan Petugas')
                     ->select('#status', 'selesai')
                     ->type('#catatan', 'Keluhan sudah ditindaklanjuti dan diselesaikan oleh petugas.')
                     ->press('Simpan Tanggapan')
                     ->assertPathIs('/edukasi/pengaduan')
                     ->assertSee($pengaduan->nomor_tiket);
+            });
+        } finally {
+            $pengaduan->delete();
+        }
+    }
+
+    /**
+     * SCRUM-185 [KF-50]: Menguji warga membuka halaman edit pengaduan berstatus baru dan menyimpan perubahan.
+     */
+    public function test_resident_can_edit_newly_created_complaint_via_browser(): void
+    {
+        $resident = $this->activeUserForRole('Warga / Orang Tua');
+        $isiAwal = 'Uraian awal edit Dusk ' . uniqid();
+        $isiBaru = 'Uraian sesudah diubah Dusk ' . uniqid();
+
+        $pengaduan = Pengaduan::create([
+            'orang_tua_id' => $resident->orangTua?->id,
+            'kategori' => 'Layanan Posyandu',
+            'judul' => 'Judul Awal Edit Dusk',
+            'isi' => $isiAwal,
+            'is_anonymous' => false,
+            'status' => 'baru',
+        ]);
+
+        try {
+            $this->browse(function (Browser $browser) use ($resident, $pengaduan, $isiBaru) {
+                $browser->loginAs($resident)->visit('/edukasi/pengaduan/' . $pengaduan->id)
+                    ->assertSee('TIMELINE STATUS PENANGANAN')
+                    ->assertSee('Edit Pengaduan')
+                    ->clickLink('Edit Pengaduan')
+                    ->assertPathIs('/edukasi/pengaduan/' . $pengaduan->id . '/edit')
+                    ->type('#isi', $isiBaru)
+                    ->press('Simpan Perubahan')
+                    ->assertPathIs('/edukasi/pengaduan')
+                    ->assertSee($isiBaru);
             });
         } finally {
             $pengaduan->delete();

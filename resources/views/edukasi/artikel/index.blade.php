@@ -45,7 +45,7 @@
             </span>
         </a>
 
-        @unless($isResident)
+        @can('access-pengaduan-portal')
         <!-- Tab 2: Pengaduan Warga (Sprint 3) -->
         <a href="{{ Route::has('edukasi.pengaduan.index') ? route('edukasi.pengaduan.index') : '#' }}" 
            class="inline-flex items-center gap-2.5 pb-3 text-slate-400 font-semibold hover:text-slate-700 transition-colors">
@@ -54,7 +54,7 @@
                 {{ $totalPengaduan ?? 14 }}
             </span>
         </a>
-        @endunless
+        @endcan
     </div>
 
     <!-- Bilah Filter & Pencarian (Gambar 14 Mockup Proposal) -->

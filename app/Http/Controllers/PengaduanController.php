@@ -5,22 +5,27 @@ namespace App\Http\Controllers;
 use App\Models\Artikel;
 use App\Models\OrangTua;
 use App\Models\Pengaduan;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class PengaduanController extends Controller
 {
+    private const KATEGORI_LIST = [
+        'Distribusi PMT',
+        'Layanan Posyandu',
+        'Data KMS',
+        'Antrean Posyandu',
+    ];
+
     public function index(Request $request)
     {
-        $kategoriList = [
-            'Distribusi PMT',
-            'Layanan Posyandu',
-            'Data KMS',
-            'Antrean Posyandu',
-        ];
+        $user = $request->user();
+        $isResident = $user->role?->name_role === Role::RESIDENT;
 
         $pengaduans = Pengaduan::with(['orangTua', 'adminPenanggap'])
+            ->visibleTo($user)
             ->search($request->query('q'))
             ->kategori($request->query('kategori'))
             ->status($request->query('status'))
@@ -28,27 +33,100 @@ class PengaduanController extends Controller
             ->paginate(5)
             ->withQueryString();
 
-        $totalArtikel = Artikel::count();
-        $totalPengaduan = Pengaduan::count();
+        $totalArtikel = Artikel::query()->when($isResident, fn ($q) => $q->published())->count();
+        $totalPengaduan = Pengaduan::visibleTo($user)->count();
+        $kategoriList = self::KATEGORI_LIST;
 
-        return view('edukasi.pengaduan.index', compact('pengaduans', 'kategoriList', 'totalArtikel', 'totalPengaduan'));
+        return view('edukasi.pengaduan.index', compact(
+            'pengaduans',
+            'kategoriList',
+            'totalArtikel',
+            'totalPengaduan',
+            'isResident'
+        ));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        $kategoriList = [
-            'Distribusi PMT',
-            'Layanan Posyandu',
-            'Data KMS',
-            'Antrean Posyandu',
-        ];
+        $isResident = $request->user()->role?->name_role === Role::RESIDENT;
+        $kategoriList = self::KATEGORI_LIST;
+        $orangTuasList = $isResident
+            ? collect()
+            : OrangTua::select('id', 'name', 'nik', 'alamat')->orderBy('name')->get();
 
-        $orangTuasList = OrangTua::select('id', 'name', 'nik', 'alamat')->orderBy('name')->get();
-
-        return view('edukasi.pengaduan.create', compact('kategoriList', 'orangTuasList'));
+        return view('edukasi.pengaduan.create', compact('kategoriList', 'orangTuasList', 'isResident'));
     }
 
     public function store(Request $request)
+    {
+        $data = $this->validateAndResolvePayload($request);
+        $data['status'] = 'baru';
+
+        Pengaduan::create($data);
+
+        return redirect()
+            ->route('edukasi.pengaduan.index')
+            ->with('success', 'Pengaduan warga berhasil dicatat.');
+    }
+
+    public function show(Request $request, $id)
+    {
+        $pengaduan = Pengaduan::with(['orangTua', 'adminPenanggap'])->findOrFail($id);
+        $this->authorizeResidentAccess($request, $pengaduan);
+        $isResident = $request->user()->role?->name_role === Role::RESIDENT;
+
+        return view('edukasi.pengaduan.show', compact('pengaduan', 'isResident'));
+    }
+
+    public function edit(Request $request, $id)
+    {
+        $pengaduan = Pengaduan::findOrFail($id);
+        $this->authorizeResidentAccess($request, $pengaduan);
+        abort_if($pengaduan->status !== 'baru', 403, 'Pengaduan yang sudah ditindaklanjuti tidak dapat diubah.');
+
+        $isResident = $request->user()->role?->name_role === Role::RESIDENT;
+        $kategoriList = self::KATEGORI_LIST;
+        $orangTuasList = $isResident
+            ? collect()
+            : OrangTua::select('id', 'name', 'nik', 'alamat')->orderBy('name')->get();
+
+        return view('edukasi.pengaduan.edit', compact('pengaduan', 'kategoriList', 'orangTuasList', 'isResident'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $pengaduan = Pengaduan::findOrFail($id);
+        $this->authorizeResidentAccess($request, $pengaduan);
+        abort_if($pengaduan->status !== 'baru', 403, 'Pengaduan yang sudah ditindaklanjuti tidak dapat diubah.');
+
+        $data = $this->validateAndResolvePayload($request, $pengaduan);
+        $pengaduan->update($data);
+
+        return redirect()
+            ->route('edukasi.pengaduan.index')
+            ->with('success', "Pengaduan {$pengaduan->nomor_tiket} berhasil diperbarui.");
+    }
+
+    public function destroy($id)
+    {
+        $pengaduan = Pengaduan::findOrFail($id);
+        $tiket = $pengaduan->nomor_tiket;
+
+        if ($pengaduan->foto_bukti_path) {
+            Storage::disk('public')->delete($pengaduan->foto_bukti_path);
+        }
+
+        $pengaduan->delete();
+
+        return redirect()
+            ->route('edukasi.pengaduan.index')
+            ->with('success', "Pengaduan {$tiket} berhasil dihapus.");
+    }
+
+    /**
+     * Memvalidasi input form aduan serta menangani lampiran foto dan anonimitas.
+     */
+    private function validateAndResolvePayload(Request $request, ?Pengaduan $existing = null): array
     {
         $validated = $request->validate([
             'kategori' => 'required|string',
@@ -59,33 +137,43 @@ class PengaduanController extends Controller
             'foto_bukti' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
         ]);
 
-        $fotoPath = null;
+        $fotoPath = $existing?->foto_bukti_path;
         if ($request->hasFile('foto_bukti')) {
+            if ($fotoPath) {
+                Storage::disk('public')->delete($fotoPath);
+            }
             $fotoPath = $request->file('foto_bukti')->store('pengaduan', 'public');
         }
 
+        $user = $request->user();
+        $isResident = $user->role?->name_role === Role::RESIDENT;
         $isAnonymous = $request->boolean('is_anonymous');
+        $orangTuaId = $isAnonymous
+            ? null
+            : ($isResident ? $user->orangTua?->id : ($validated['orang_tua_id'] ?? null));
 
-        Pengaduan::create([
+        return [
             'kategori' => $validated['kategori'],
             'judul' => $validated['judul'],
             'isi' => $validated['isi'],
-            'orang_tua_id' => $isAnonymous ? null : ($validated['orang_tua_id'] ?? null),
+            'orang_tua_id' => $orangTuaId,
             'is_anonymous' => $isAnonymous,
             'foto_bukti_path' => $fotoPath,
-            'status' => 'baru',
-        ]);
-
-        return redirect()
-            ->route('edukasi.pengaduan.index')
-            ->with('success', 'Pengaduan warga berhasil dicatat.');
+        ];
     }
 
-    public function show($id)
+    /**
+     * Mencegah warga mengakses atau mengubah pengaduan non-anonim milik warga lain.
+     */
+    private function authorizeResidentAccess(Request $request, Pengaduan $pengaduan): void
     {
-        $pengaduan = Pengaduan::with(['orangTua', 'adminPenanggap'])->findOrFail($id);
+        $user = $request->user();
+        $isResident = $user->role?->name_role === Role::RESIDENT;
 
-        return view('edukasi.pengaduan.show', compact('pengaduan'));
+        abort_if(
+            $isResident && !$pengaduan->is_anonymous && $pengaduan->orang_tua_id !== $user->orangTua?->id,
+            403
+        );
     }
 
     public function tanggapi(Request $request, $id)

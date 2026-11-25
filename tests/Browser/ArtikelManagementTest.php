@@ -23,6 +23,7 @@ class ArtikelManagementTest extends DuskTestCase
                 ->assertPresent('#filterStatus')
                 ->type('#searchInput', 'Stunting')
                 ->keys('#searchInput', '{enter}')
+                ->waitUntil('window.location.search.includes("q=Stunting")', 5)
                 ->assertQueryStringHas('q', 'Stunting');
         });
     }
@@ -59,16 +60,20 @@ class ArtikelManagementTest extends DuskTestCase
             'judul' => 'Nutrisi Tepat Mencegah Stunting Balita',
             'kategori' => 'Pencegahan Stunting',
             'status' => 'published',
-            'url_slug' => 'nutrisi-tepat-mencegah-stunting-balita-dusk',
+            'url_slug' => 'nutrisi-tepat-mencegah-stunting-balita-dusk-' . uniqid(),
             'konten' => '<p>Simulasi Dusk peramban untuk membaca materi terbit.</p>',
             'published_at' => now(),
         ]);
 
-        $this->browse(function (Browser $browser) use ($artikel) {
-            $browser->logout()->visit('/edukasi/artikel/baca/'.$artikel->url_slug)
-                ->assertSee('Nutrisi Tepat Mencegah Stunting Balita')
-                ->assertSee('Pencegahan Stunting')
-                ->assertSee('Simulasi Dusk peramban untuk membaca materi terbit.');
-        });
+        try {
+            $this->browse(function (Browser $browser) use ($artikel) {
+                $browser->logout()->visit('/edukasi/artikel/baca/'.$artikel->url_slug)
+                    ->assertSee('Nutrisi Tepat Mencegah Stunting Balita')
+                    ->assertSee('Pencegahan Stunting')
+                    ->assertSee('Simulasi Dusk peramban untuk membaca materi terbit.');
+            });
+        } finally {
+            $artikel->delete();
+        }
     }
 }
