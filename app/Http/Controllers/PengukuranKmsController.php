@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Requests\PengukuranKmsRequest;
 use App\Models\PengukuranKms;
 use App\Models\Balita;
+use App\Services\ZScoreService;
+use App\Services\StatusGiziService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class PengukuranKmsController extends Controller
 {
@@ -39,6 +42,13 @@ class PengukuranKmsController extends Controller
         }
         if ($endDate = $request->input('end_date')) {
             $query->where('date', '<=', $endDate);
+        }
+        if ($status = $request->input('status')) {
+            if ($status === '__null') {
+                $query->whereNull('status_gizi');
+            } elseif (\App\Enums\StatusGizi::tryFrom($status)) {
+                $query->status($status);
+            }
         }
 
         $pengukurans = $query->paginate(10)->withQueryString();
@@ -74,8 +84,47 @@ class PengukuranKmsController extends Controller
             $q->whereIn('name', ['Nakes / Bidan', 'Kader Posyandu']);
         })->first()->id;
 
-        // KF-14/KF-15: hitung z-score dan status gizi saat simpan
-        // (belum diimplementasikan, z-score dan status_gizi tetap null)
+        // KF-14: Hitung z-score otomatis
+        try {
+            $pengukuran = new PengukuranKms($data);
+            $pengukuran->balita_id = $data['balita_id'];
+            $pengukuran->date = $data['date'];
+            
+            // Load relasi balita untuk perhitungan
+            $pengukuran->load('balita');
+            
+            $zScoreService = app(ZScoreService::class);
+            $zScores = $zScoreService->untukPengukuran($pengukuran);
+            
+            $data['z_score_bbu'] = $zScores['z_score_bbu'];
+            $data['z_score_tbu'] = $zScores['z_score_tbu'];
+            $data['z_score_bbtb'] = $zScores['z_score_bbtb'];
+        } catch (\Exception $e) {
+            // Jangan gagalkan penyimpanan, cukup log error
+            Log::warning('Gagal menghitung z-score saat store pengukuran', [
+                'error' => $e->getMessage(),
+                'data' => $data,
+            ]);
+            
+            $data['z_score_bbu'] = null;
+            $data['z_score_tbu'] = null;
+            $data['z_score_bbtb'] = null;
+        }
+
+        // KF-15: tentukan status gizi dari z-score tersimpan
+        try {
+            $pengukuranSementara = new PengukuranKms($data);
+            $pengukuranSementara->z_score_bbu = $data['z_score_bbu'];
+            $pengukuranSementara->z_score_tbu = $data['z_score_tbu'];
+            $pengukuranSementara->z_score_bbtb = $data['z_score_bbtb'];
+            $data['status_gizi'] = StatusGiziService::untukPengukuran($pengukuranSementara)['status']?->value;
+        } catch (\Throwable $e) {
+            $data['status_gizi'] = null;
+            Log::warning('Gagal menentukan status gizi saat store pengukuran', [
+                'error' => $e->getMessage(),
+                'data' => $data,
+            ]);
+        }
 
         PengukuranKms::create($data);
 
@@ -134,8 +183,50 @@ class PengukuranKmsController extends Controller
         // Jangan ubah user_id (petugas asli tetap)
         unset($data['user_id']);
 
-        // KF-14/KF-15: hitung z-score dan status gizi saat simpan
-        // (belum diimplementasikan, z-score dan status_gizi tetap null)
+        // KF-14: Hitung ulang z-score (BB/TB/tanggal bisa berubah)
+        try {
+            // Update data dulu untuk perhitungan
+            $kms->fill($data);
+            
+            // Pastikan relasi balita dimuat
+            if (!$kms->relationLoaded('balita')) {
+                $kms->load('balita');
+            }
+            
+            $zScoreService = app(ZScoreService::class);
+            $zScores = $zScoreService->untukPengukuran($kms);
+            
+            $data['z_score_bbu'] = $zScores['z_score_bbu'];
+            $data['z_score_tbu'] = $zScores['z_score_tbu'];
+            $data['z_score_bbtb'] = $zScores['z_score_bbtb'];
+        } catch (\Exception $e) {
+            // Jangan gagalkan penyimpanan, cukup log error
+            Log::warning('Gagal menghitung z-score saat update pengukuran', [
+                'error' => $e->getMessage(),
+                'pengukuran_id' => $kms->id,
+                'data' => $data,
+            ]);
+            
+            $data['z_score_bbu'] = null;
+            $data['z_score_tbu'] = null;
+            $data['z_score_bbtb'] = null;
+        }
+
+        // KF-15: tentukan status gizi dari z-score hasil perhitungan ulang
+        try {
+            $kms->z_score_bbu = $data['z_score_bbu'];
+            $kms->z_score_tbu = $data['z_score_tbu'];
+            $kms->z_score_bbtb = $data['z_score_bbtb'];
+            $hasil = StatusGiziService::untukPengukuran($kms);
+            $data['status_gizi'] = $hasil['status']?->value;
+        } catch (\Throwable $e) {
+            $data['status_gizi'] = null;
+            Log::warning('Gagal menentukan status gizi saat update pengukuran', [
+                'error' => $e->getMessage(),
+                'pengukuran_id' => $kms->id,
+                'data' => $data,
+            ]);
+        }
 
         $kms->update($data);
 

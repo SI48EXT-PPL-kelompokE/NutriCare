@@ -7,6 +7,7 @@ use App\Models\PengukuranKms;
 use App\Models\Balita;
 use App\Models\User;
 use App\Models\StandardLms;
+use App\Services\StatusGiziService;
 use Carbon\Carbon;
 
 class PengukuranKmsSeeder extends Seeder
@@ -21,6 +22,7 @@ class PengukuranKmsSeeder extends Seeder
 
         $balitas = Balita::all();
         $totalPengukuran = 0;
+        $balitaIndex = 0;
 
         foreach ($balitas as $balita) {
             $umurBulan = Carbon::parse($balita->birth_date)->diffInMonths(now());
@@ -63,12 +65,27 @@ class PengukuranKmsSeeder extends Seeder
                 $zScoreTbu = rand(-20, 20) / 10;
                 $zScoreBbtb = rand(-20, 20) / 10;
 
-                // Status gizi
-                $statusGizi = 'Normal';
-                if ($zScore < -3) $statusGizi = 'Gizi Buruk';
-                elseif ($zScore < -2) $statusGizi = 'Gizi Kurang';
-                elseif ($zScoreTbu < -2) $statusGizi = 'Stunting';
-                elseif ($zScoreBbtb < -2) $statusGizi = 'Wasting';
+                // Status seed terakhir dijaga agar dashboard memiliki contoh Stunting, Wasting, dan Gizi Buruk.
+                if ($j === $jumlahPengukuran - 1) {
+                    if ($balitaIndex < 2) {
+                        $zScore = -1.0;
+                        $zScoreTbu = -1.0;
+                        $zScoreBbtb = -3.5;
+                    } elseif ($balitaIndex < 6) {
+                        $zScore = -1.0;
+                        $zScoreTbu = -1.0;
+                        $zScoreBbtb = -2.5;
+                    } elseif ($balitaIndex < 11) {
+                        $zScore = -1.0;
+                        $zScoreTbu = -2.5;
+                        $zScoreBbtb = -1.0;
+                    }
+                }
+
+                $zScore = round($zScore, 2);
+                $zScoreTbu = round($zScoreTbu, 2);
+                $zScoreBbtb = round($zScoreBbtb, 2);
+                $statusGizi = StatusGiziService::tentukan($zScore, $zScoreTbu, $zScoreBbtb)['status']?->value;
 
                 PengukuranKms::create([
                     'balita_id' => $balita->id,
@@ -84,6 +101,54 @@ class PengukuranKmsSeeder extends Seeder
                 ]);
 
                 $totalPengukuran++;
+            }
+            $balitaIndex++;
+        }
+
+        // Pastikan pengukuran terakhir menyediakan sampel dashboard yang representatif.
+        $petugasId = !empty($petugasIds) ? $petugasIds[0] : null;
+        if ($petugasId) {
+            foreach (Balita::orderBy('id')->take(13)->get()->values() as $index => $balita) {
+                if ($index < 2) {
+                    $zBbu = -1.0;
+                    $zTbu = -1.0;
+                    $zBbtb = -3.5;
+                } elseif ($index < 6) {
+                    $zBbu = -1.0;
+                    $zTbu = -1.0;
+                    $zBbtb = -2.5;
+                } elseif ($index < 11) {
+                    $zBbu = -1.0;
+                    $zTbu = -2.5;
+                    $zBbtb = -1.0;
+                } else {
+                    $zBbu = 0.0;
+                    $zTbu = 0.0;
+                    $zBbtb = 0.0;
+                }
+
+                $status = StatusGiziService::tentukan($zBbu, $zTbu, $zBbtb)['status']?->value;
+                $latest = PengukuranKms::where('balita_id', $balita->id)
+                    ->latest('date')
+                    ->first();
+                $date = $latest ? $latest->date->copy()->addDay() : now()->subDay();
+                if ($date->isFuture()) {
+                    $date = now()->subDay();
+                }
+
+                PengukuranKms::updateOrCreate([
+                    'balita_id' => $balita->id,
+                    'date' => $date,
+                ], [
+                    'user_id' => $petugasId,
+                    'berat_badan' => 10,
+                    'tinggi_badan' => 80,
+                    'lingkar_lengan_atas' => null,
+                    'z_score_bbu' => $zBbu,
+                    'z_score_tbu' => $zTbu,
+                    'z_score_bbtb' => $zBbtb,
+                    'status_gizi' => $status,
+                ]);
             }
         }
 

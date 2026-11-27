@@ -172,6 +172,23 @@
         <x-form.error name="lingkar_lengan_atas" />
     </x-form.group>
 
+    <!-- Informasi Z-Score -->
+    <p class="text-sm font-medium text-slate-700">Status gizi ditentukan otomatis saat disimpan.</p>
+    <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <div class="flex items-start gap-3">
+            <svg class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <div>
+                <h3 class="text-sm font-semibold text-blue-900">Z-score dihitung otomatis</h3>
+                <p class="mt-1 text-xs text-blue-700">
+                    Z-score (BB/U, TB/U, BB/TB atau BB/PB) akan dihitung otomatis saat data disimpan menggunakan metode LMS WHO.
+                    Anda tidak perlu menghitungnya secara manual.
+                </p>
+            </div>
+        </div>
+    </div>
+
     <!-- Tombol Aksi -->
     <div class="flex items-center gap-3 pt-4">
         <button type="submit" class="px-6 py-2.5 bg-teal-600 text-white text-sm font-semibold rounded-lg hover:bg-teal-700 transition-colors">

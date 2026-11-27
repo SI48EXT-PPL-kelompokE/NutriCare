@@ -21,6 +21,7 @@ class PermissionMatrixController extends Controller
         'paket_pmt' => 'Paket PMT',
         'artikel' => 'Artikel Edukasi',
         'konseling' => 'Konseling Gizi',
+        'pengaduan' => 'Pengaduan Warga',
     ];
 
     private const ACTIONS = [
@@ -30,7 +31,7 @@ class PermissionMatrixController extends Controller
         'can_delete' => 'Hapus',
     ];
 
-    private const RESIDENT_ACTIONS = ['artikel' => 'can_view', 'konseling' => 'can_create'];
+    private const RESIDENT_ACTIONS = ['artikel' => 'can_view', 'konseling' => 'can_create', 'pengaduan' => 'can_create'];
 
     public function index(): View
     {

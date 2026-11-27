@@ -3,14 +3,17 @@
 use App\Http\Controllers\ArtikelController;
 use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\BalitaViewController;
+use App\Http\Controllers\GrafikPertumbuhanController;
 use App\Http\Controllers\ImunisasiController;
 use App\Http\Controllers\OrangTuaViewController;
 use App\Http\Controllers\PaketPmtController;
+use App\Http\Controllers\PengaduanController;
 use App\Http\Controllers\PengukuranKmsController;
 use App\Http\Controllers\SesiKonselingController;
 use App\Http\Controllers\Settings\AccountController;
 use App\Http\Controllers\Settings\PermissionMatrixController;
 use App\Http\Controllers\Settings\RoleController;
+use App\Http\Controllers\StokGudangController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [SessionController::class, 'landing'])->name('home');
@@ -35,7 +38,7 @@ Route::prefix('pengaturan')->name('settings.')->middleware(['auth:web', 'can:man
         ->middleware("can:access-module,'hak_akses','edit'")->name('permissions.update');
 });
 
-// Modul Edukasi & Layanan Warga - PBI 15: Artikel & Panduan Edukasi
+// Modul Edukasi & Layanan Warga - PBI 15 & 17
 Route::prefix('edukasi')->name('edukasi.')->group(function () {
     Route::get('artikel/baca/{slug}', [ArtikelController::class, 'baca'])->name('artikel.baca');
     Route::middleware('auth:web')->group(function () {
@@ -46,6 +49,25 @@ Route::prefix('edukasi')->name('edukasi.')->group(function () {
             ->middlewareFor(['create', 'store'], "can:access-module,'artikel','create'")
             ->middlewareFor(['edit', 'update'], "can:access-module,'artikel','edit'")
             ->middlewareFor('destroy', "can:access-module,'artikel','delete'");
+
+        Route::get('pengaduan/export', [PengaduanController::class, 'export'])
+            ->middleware("can:access-module,'laporan','create'")->name('pengaduan.export');
+        Route::patch('pengaduan/{pengaduan}/tanggapi', [PengaduanController::class, 'tanggapi'])
+            ->middleware("can:access-module,'pengaduan','edit'")->name('pengaduan.tanggapi');
+        Route::get('pengaduan', [PengaduanController::class, 'index'])
+            ->middleware('can:access-pengaduan-portal')->name('pengaduan.index');
+        Route::get('pengaduan/create', [PengaduanController::class, 'create'])
+            ->middleware("can:access-module,'pengaduan','create'")->name('pengaduan.create');
+        Route::post('pengaduan', [PengaduanController::class, 'store'])
+            ->middleware("can:access-module,'pengaduan','create'")->name('pengaduan.store');
+        Route::get('pengaduan/{pengaduan}/edit', [PengaduanController::class, 'edit'])
+            ->middleware("can:access-module,'pengaduan','create'")->name('pengaduan.edit');
+        Route::put('pengaduan/{pengaduan}', [PengaduanController::class, 'update'])
+            ->middleware("can:access-module,'pengaduan','create'")->name('pengaduan.update');
+        Route::delete('pengaduan/{pengaduan}', [PengaduanController::class, 'destroy'])
+            ->middleware('can:delete-pengaduan')->name('pengaduan.destroy');
+        Route::get('pengaduan/{pengaduan}', [PengaduanController::class, 'show'])
+            ->middleware('can:access-pengaduan-portal')->name('pengaduan.show');
     });
 });
 
@@ -63,7 +85,7 @@ Route::middleware('auth:web')->group(function () {
         ->middlewareFor('destroy', "can:access-module,'konseling','delete'");
 });
 
-// Modul Logistik PMT - PBI 8: Master Paket PMT
+// Modul Logistik PMT - PBI 8 (Master Paket PMT) & PBI 9 (CRUD Stok Gudang)
 Route::prefix('pmt')->name('pmt.')->middleware('auth:web')->group(function () {
     Route::post('paket/calculate-preview', [PaketPmtController::class, 'calculatePreview'])
         ->middleware("can:access-module,'paket_pmt','view'")->name('paket.calculate-preview');
@@ -74,6 +96,20 @@ Route::prefix('pmt')->name('pmt.')->middleware('auth:web')->group(function () {
         ->middlewareFor(['create', 'store'], "can:access-module,'paket_pmt','create'")
         ->middlewareFor(['edit', 'update'], "can:access-module,'paket_pmt','edit'")
         ->middlewareFor('destroy', "can:access-module,'paket_pmt','delete'");
+
+    // PBI 9: Stok Gudang (KF-27, KF-28, KF-29, KF-30, KF-31)
+    Route::post('stok/keluarkan-fefo', [StokGudangController::class, 'keluarkanFefo'])
+        ->middleware("can:access-module,'stok_gudang','edit'")->name('stok.keluarkan-fefo');
+    Route::post('stok/preview-fefo', [StokGudangController::class, 'previewFefo'])
+        ->middleware("can:access-module,'stok_gudang','view'")->name('stok.preview-fefo');
+    Route::get('stok/scan-batch', [StokGudangController::class, 'scanBatch'])
+        ->middleware("can:access-module,'stok_gudang','view'")->name('stok.scan-batch');
+    Route::resource('stok', StokGudangController::class)->except(['create', 'show', 'edit'])
+        ->parameters(['stok' => 'stok'])
+        ->middlewareFor('index', "can:access-module,'stok_gudang','view'")
+        ->middlewareFor('store', "can:access-module,'stok_gudang','create'")
+        ->middlewareFor('update', "can:access-module,'stok_gudang','edit'")
+        ->middlewareFor('destroy', "can:access-module,'stok_gudang','delete'");
 });
 
 Route::middleware('auth:web')->group(function () {
@@ -90,6 +126,10 @@ Route::middleware('auth:web')->group(function () {
         ->middlewareFor(['create', 'store'], "can:access-module,'imunisasi','create'")
         ->middlewareFor(['edit', 'update'], "can:access-module,'imunisasi','edit'")
         ->middlewareFor('destroy', "can:access-module,'imunisasi','delete'");
+
+    // KF-16: Grafik pertumbuhan balita (Chart.js)
+    Route::get('kms-anak-saya', [GrafikPertumbuhanController::class, 'anakSaya'])->name('kms.anak-saya');
+    Route::get('balita/{balita}/pertumbuhan', [GrafikPertumbuhanController::class, 'show'])->name('balita.pertumbuhan');
 });
 
 // Modul Kependudukan - Data Balita & Orang Tua (branch adhani)

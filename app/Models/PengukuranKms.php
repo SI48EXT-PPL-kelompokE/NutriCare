@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\StatusGizi;
+use App\Services\StatusGiziService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -18,7 +20,12 @@ class PengukuranKms extends Model
         'berat_badan',
         'tinggi_badan',
         'lingkar_lengan_atas',
-        // z_score dan status_gizi diisi otomatis oleh KF-14/KF-15
+        // Kolom turunan diisi otomatis oleh ZScoreService (KF-14) dan StatusGiziService (KF-15).
+        // Tidak ada di validasi PengukuranKmsRequest, sehingga nilai dari request mentah tetap diabaikan.
+        'z_score_bbu',
+        'z_score_tbu',
+        'z_score_bbtb',
+        'status_gizi',
     ];
 
     protected function casts(): array
@@ -32,6 +39,50 @@ class PengukuranKms extends Model
             'z_score_tbu' => 'decimal:2',
             'z_score_bbtb' => 'decimal:2',
         ];
+    }
+
+    public function getStatusGiziAttribute($value): ?StatusGizi
+    {
+        return $value !== null ? StatusGizi::tryFrom($value) : null;
+    }
+
+    public function getHasilStatusAttribute(): array
+    {
+        return StatusGiziService::untukPengukuran($this);
+    }
+
+    public function scopeStatus($query, $status)
+    {
+        if ($status instanceof StatusGizi) {
+            $status = $status->value;
+        }
+
+        return $query->where('status_gizi', $status);
+    }
+
+    public function scopeStunting($query)
+    {
+        return $query->where(function ($q) {
+            $q->where('status_gizi', StatusGizi::STUNTING->value)
+                ->orWhere('status_gizi', StatusGizi::SANGAT_PENDEK->value);
+        });
+    }
+
+    public function scopeWasting($query)
+    {
+        return $query->where(function ($q) {
+            $q->where('status_gizi', StatusGizi::GIZI_KURANG->value)
+                ->orWhere('status_gizi', StatusGizi::GIZI_BURUK->value);
+        });
+    }
+
+    public function scopePerluPerhatian($query)
+    {
+        return $query->whereNotNull('status_gizi')
+            ->whereNotIn('status_gizi', [
+                StatusGizi::NORMAL->value,
+                StatusGizi::TINGGI->value,
+            ]);
     }
 
     public function balita()

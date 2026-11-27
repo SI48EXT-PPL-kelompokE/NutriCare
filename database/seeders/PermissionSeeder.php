@@ -21,7 +21,7 @@ class PermissionSeeder extends Seeder
             'paket_pmt' => ['Admin / Kepala Puskesmas' => [1,1,1,1], 'Kader Posyandu' => [1,0,0,0]],
             'stok_gudang' => ['Admin / Kepala Puskesmas' => [1,1,1,1], 'Kader Posyandu' => [1,1,1,0]],
             'artikel' => ['Admin / Kepala Puskesmas' => [1,1,1,1], 'Nakes / Bidan' => [1,1,1,0], 'Kader Posyandu' => [1,1,1,0], 'Warga / Orang Tua' => [1,0,0,0]],
-            'pengaduan' => ['Admin / Kepala Puskesmas' => [1,0,1,0], 'Warga / Orang Tua' => [0,1,0,0]],
+            'pengaduan' => ['Admin / Kepala Puskesmas' => [1,0,1,1], 'Warga / Orang Tua' => [0,1,0,0]],
             'dashboard' => ['Admin / Kepala Puskesmas' => [1,0,0,0]],
             'laporan' => ['Admin / Kepala Puskesmas' => [1,1,0,0]],
             
